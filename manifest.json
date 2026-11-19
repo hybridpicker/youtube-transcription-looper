@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Transkriptions-Looper",
+  "version": "2.1.0",
+  "description": "Heraushören und Transkribieren: präziser A/B-Loop, Zeitlupe, Tonhöhe, Klangfilter und Tonanzeige für YouTube-Videos und Audiodateien.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Transkriptions-Looper" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["shared/common.js", "youtube/panel-css.js", "youtube/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["app/live-worklet.js", "app/live-core.js", "app/vocoder.js", "app/fft.js"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ]
+}
