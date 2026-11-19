@@ -76,6 +76,9 @@ h2::before { content: "▾"; display: inline-block; width: 1.1em; }
 .chips button { flex: 1 1 0; min-width: 26px; padding: 0; height: 24px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); font: 600 11.5px system-ui, sans-serif; cursor: pointer; }
 .chips button:hover { color: var(--text); border-color: #3a4651; }
 .chips button.on { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.gridrow { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 12px; }
+.gridrow .sp { flex: 1; }
+.time-input.num { width: 54px; }
 .stepper { display: flex; gap: 4px; }
 .stepper .btn { flex: 1; padding: 0 4px; }
 .dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -124,6 +127,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); }
 :host(.side) .group:not(.right) { flex-basis: 100%; order: 5; }
 :host(.side) .group .sep { display: none; }
 :host(.side) .time-input { flex: 1; width: 0; min-width: 58px; height: 26px; }
+:host(.side) .time-input.num { flex: 0 0 50px; width: 50px; min-width: 0; }
 :host(.side) .panels, :host(.side) .bottom { grid-template-columns: 1fr; gap: 7px; }
 :host(.side) .panel { padding: 7px 9px; gap: 6px; }
 :host(.side) .panel-head { min-height: 22px; }
@@ -132,7 +136,10 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); }
 :host(.side) [data-sec="places"] { order: -1; }
 :host(.side) .btn .tx { display: none; }
 :host(.side) .btn .ic { display: inline; }
-:host(.side) #loop-save, :host(.side) #loop-clear { width: 28px; padding: 0; }
+:host(.side) #loop-clear { width: 24px; padding: 0; }
+:host(.side) .group .btn.icon { width: 24px; }
+:host(.side) .group .time-input { min-width: 52px; padding: 0 2px; font-size: 11.5px; }
+:host(.side) .group .btn:not(.icon) { padding: 0 6px; }
 :host(.side) .items { max-height: 132px; }
 :host(.side) .help { grid-template-columns: 1fr; }
 `;

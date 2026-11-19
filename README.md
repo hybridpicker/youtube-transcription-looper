@@ -25,16 +25,29 @@ Der Knopf `⬓` in der Kopfzeile setzt das Bedienfeld stattdessen breit unter da
 | Bereich | Was er kann |
 | --- | --- |
 | Zeitleiste | Klick springt, Ziehen zieht einen Loop auf, die Griffe A/B lassen sich verschieben. Ein neuer Loop wird automatisch herangezoomt; **Alles** zeigt wieder das ganze Video, `Strg`/`⌘` + Mausrad zoomt frei. Die Wellenform entsteht beim Abspielen und zeigt, was du schon gehört hast. |
-| Loop | Um die eigene Länge weiter/zurück springen, halbieren, verdoppeln, Grenzen fein verschieben, Pause zwischen den Durchläufen. `★` speichert den Loop in die Stellen-Liste, `✕` entfernt ihn. |
+| Loop | Um die eigene Länge weiter/zurück springen, halbieren, verdoppeln, Grenzen fein verschieben, Pause zwischen den Durchläufen. `✕` entfernt den Loop. |
 | Tempo | 10–200 % bei gleicher Tonhöhe, auch unter YouTubes Grenze von 25 %. Ein Klick auf die Prozentzahl setzt auf 100 % zurück. |
 | Tonhöhe | ±12 Halbtöne und Feinstimmung in Cent, unabhängig vom Tempo. |
 | Klang | Kanalwahl (links, rechts, Mono, Mitte entfernt) und Frequenzbereich, z. B. nur Bass. |
-| Stellen | Marker und gespeicherte Loops mit Namen, pro Video gemerkt. |
+| Takte | Taktraster in der Zeitleiste mit Taktnummern; Loop-Grenzen rasten auf Schläge und Takte ein, und ein Loop lässt sich direkt als „Takt 5 bis 8“ setzen. |
+| Stellen | Marker (**+ Marker**) und gespeicherte Loops (**+ Loop**) mit Namen, pro Video gemerkt. |
 | Töne | Zeigt live über einer Klaviatur, welche Töne klingen, und schätzt den Akkord. Ein Klick auf eine Taste spielt den Ton zum Vergleich. |
 
 Loop, Tempo, Tonhöhe und Stellen werden pro Video gespeichert.
 
 Die Tastenkürzel sind dieselben wie in der Werkstatt (siehe unten, ohne die Notizfeld-Kürzel). Solange das Bedienfeld offen ist, haben sie Vorrang vor YouTubes eigenen Tasten; der Knopf **Tasten** schaltet das aus.
+
+### Takte markieren
+
+Der Abschnitt **Takte** ist anfangs eingeklappt; ein Klick auf die Überschrift öffnet ihn.
+
+1. **Tempo festlegen:** Video laufen lassen und im Takt auf **Tippen** klicken (oder `T` drücken), mindestens zwei, besser acht Schläge. Alternativ das Tempo als BPM eintragen. Das funktioniert auch bei verlangsamter Wiedergabe; das Tempo bezieht sich immer auf das Original.
+2. **Eins setzen:** An der ersten Zählzeit von Takt 1 auf **1 hier** klicken (oder `X`). Mit `◂` `▸` lässt sich das Raster um 10 ms verschieben (`Shift`: 50 ms).
+3. **Taktart:** Schläge pro Takt wählen (Standard 4).
+
+Danach zeigt die Zeitleiste Taktstriche mit Nummern statt Zeiten, beim Hineinzoomen auch die Schläge, und oben rechts im Abschnitt steht der aktuelle Takt und Schlag. Loop-Grenzen rasten beim Ziehen und bei `A`/`B` ein; `Alt` beim Ziehen schaltet das Einrasten aus, **Raster** (`G`) blendet alles aus. Ein Loop, der auf Taktgrenzen liegt, springt mit `,` und `.` taktweise weiter.
+
+Das Raster ist gleichmäßig. Bei Aufnahmen mit schwankendem Tempo läuft es mit der Zeit auseinander; dann die Eins am jeweiligen Abschnitt neu setzen.
 
 ### So funktioniert die Klangbearbeitung
 

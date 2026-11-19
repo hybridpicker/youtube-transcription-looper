@@ -17,7 +17,7 @@
   const NOTE_COUNT = NOTE_HIGH - NOTE_LOW + 1;
   const COLORS = { accent: "#f4b740", wave: "#5f7385", waveDim: "#3c4a57", line: "#2a333c", muted: "#8b98a5" };
 
-  const fresh = () => ({ loop: { a: null, b: null, on: false }, speed: 100, semis: 0, cents: 0, gap: 0, chan: 0, low: 0, high: 1000, items: [] });
+  const fresh = () => ({ loop: { a: null, b: null, on: false }, speed: 100, semis: 0, cents: 0, gap: 0, chan: 0, low: 0, high: 1000, items: [], grid: { on: false, bpm: null, beats: 4, origin: null } });
   let S = fresh();
   const G = { open: false, keys: true, names: "de", collapsed: false, place: "side", folded: {} };
   let video = null;
@@ -85,7 +85,6 @@
           <button id="loop-next" class="btn icon" title="Loop um seine Länge weiter (.)">▶</button>
           <button id="loop-half" class="btn" title="Loop halbieren (H)">½</button>
           <button id="loop-double" class="btn" title="Loop verdoppeln (D)">×2</button>
-          <button id="loop-save" class="btn" title="Loop in die Liste speichern (S)"><span class="ic">★</span><span class="tx">Speichern</span></button>
           <button id="loop-clear" class="btn ghost" title="Loop entfernen"><span class="ic">✕</span><span class="tx">Entfernen</span></button>
         </div>
         <div class="group right">
@@ -108,9 +107,11 @@
         <div><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>Tempo ±5 %</span></div>
         <div><span><kbd>+</kbd> <kbd>−</kbd></span><span>Tonhöhe ±1 Halbton</span></div>
         <div><span><kbd>M</kbd> <kbd>S</kbd></span><span>Marker / Loop speichern</span></div>
+        <div><span><kbd>T</kbd> <kbd>X</kbd></span><span>Tempo tippen / Eins setzen</span></div>
+        <div><span><kbd>G</kbd></span><span>Taktraster ein / aus</span></div>
         <div><span><kbd>1</kbd>–<kbd>9</kbd></span><span>Gespeicherte Stelle</span></div>
         <div><span><kbd>Z</kbd> <kbd>F</kbd></span><span>Zoom auf Loop / alles</span></div>
-        <p class="muted small">Zeitleiste: Klick = springen · Ziehen = Loop aufziehen · Shift+Klick = nächste Loop-Grenze versetzen · Strg/⌘+Mausrad = zoomen. Die Wellenform entsteht beim Abspielen.</p>
+        <p class="muted small">Zeitleiste: Klick = springen · Ziehen = Loop aufziehen · Shift+Klick = nächste Loop-Grenze versetzen · Strg/⌘+Mausrad = zoomen · Alt beim Ziehen = ohne Einrasten. Die Wellenform entsteht beim Abspielen.</p>
       </div>
       <div class="panels more">
         <div data-sec="tempo" class="panel">
@@ -152,6 +153,29 @@
               <input id="band-high" type="range" min="0" max="1000" step="1" value="1000" aria-label="Obere Grenzfrequenz">
             </div><output id="band-out">alles</output></div>
         </div>
+        <div data-sec="grid" class="panel">
+          <div class="panel-head"><h2>Takte</h2><output id="bar-out" title="Aktueller Takt · Schlag">–</output></div>
+          <div class="gridrow">
+            <button id="grid-on" class="btn" title="Taktraster und Einrasten ein/aus (G)">Raster</button>
+            <input id="bpm" class="time-input num" inputmode="decimal" placeholder="BPM" aria-label="Tempo in Schlägen pro Minute" title="Tempo in Schlägen pro Minute">
+            <button id="tap" class="btn" title="Im Takt mitklicken oder T drücken – das Tempo wird daraus berechnet">Tippen</button>
+            <button id="set-one" class="btn" title="Die Eins von Takt 1 an die Abspielposition setzen (X)">1 hier</button>
+            <select id="beats" aria-label="Schläge pro Takt" title="Schläge pro Takt">
+              <option value="2">2er</option><option value="3">3er</option><option value="4">4er</option><option value="5">5er</option>
+              <option value="6">6er</option><option value="7">7er</option><option value="9">9er</option><option value="12">12er</option>
+            </select>
+          </div>
+          <div class="gridrow">
+            <span class="muted">Takt</span>
+            <input id="bar-from" class="time-input num" inputmode="numeric" aria-label="Loop ab Takt" placeholder="von">
+            <span class="muted">bis</span>
+            <input id="bar-to" class="time-input num" inputmode="numeric" aria-label="Loop bis Takt" placeholder="bis">
+            <button id="bar-loop" class="btn" title="Diese Takte als Loop setzen">Als Loop</button>
+            <span class="sp"></span>
+            <button id="one-back" class="btn icon" title="Raster 10 ms früher (Shift: 50 ms)">◂</button>
+            <button id="one-fwd" class="btn icon" title="Raster 10 ms später (Shift: 50 ms)">▸</button>
+          </div>
+        </div>
       </div>
       <div class="bottom more">
         <div data-sec="notes" class="panel spec">
@@ -162,7 +186,7 @@
           <canvas id="spectrum"></canvas>
         </div>
         <div data-sec="places" class="panel">
-          <div class="panel-head"><h2>Stellen</h2><button id="add-marker" class="btn" title="Marker an der Abspielposition (M)">+ Marker</button></div>
+          <div class="panel-head"><h2>Stellen</h2><div class="head-right"><button id="loop-save" class="btn" title="Aktuellen Loop in die Liste speichern (S)">+ Loop</button><button id="add-marker" class="btn" title="Marker an der Abspielposition (M)">+ Marker</button></div></div>
           <ol id="items" class="items"></ol>
           <span id="items-empty" class="muted small"><kbd>M</kbd> setzt einen Marker, <kbd>S</kbd> speichert den aktuellen Loop.</span>
         </div>
@@ -260,6 +284,7 @@
       const saved = (await load(key))[key];
       if (token !== bindToken) return;
       S = Object.assign(fresh(), saved);
+      S.grid = Object.assign(fresh().grid, saved?.grid);
       view = { start: 0, end: duration };
     }
     view.end = clamp(view.end, 0.02, duration);
@@ -276,7 +301,7 @@
     if (show) mount();
     host.hidden = !show;
     $("p").classList.remove("empty");
-    for (const panel of root.querySelectorAll("[data-sec]")) panel.classList.toggle("folded", Boolean(G.folded[panel.dataset.sec]));
+    for (const panel of root.querySelectorAll("[data-sec]")) panel.classList.toggle("folded", Boolean(G.folded[panel.dataset.sec] ?? panel.dataset.sec === "grid"));
     $("p").classList.toggle("collapsed", G.collapsed);
     $("collapse").textContent = G.collapsed ? "▸" : "▾";
     $("keys").classList.toggle("on", G.keys);
@@ -400,6 +425,10 @@
     const near = (v, target) => Math.abs(bandHz(v) / target - 1) < 0.01;
     for (const b of $("focus-chips").children) b.classList.toggle("on", near(S.low, b.dataset.low) && near(S.high, b.dataset.high));
     $("names").textContent = G.names === "de" ? "H" : "B";
+    $("grid-on").classList.toggle("on", gridActive());
+    if (root.activeElement !== $("bpm")) $("bpm").value = S.grid.bpm ? String(S.grid.bpm).replace(".", ",") : "";
+    $("beats").value = S.grid.beats;
+    for (const id of ["set-one", "one-back", "one-fwd", "bar-loop"]) $(id).disabled = !S.grid.bpm;
     const noShift = audio.ok && !audio.shift;
     for (const id of ["pitch-oct-down", "pitch-down", "pitch-reset", "pitch-up", "pitch-oct-up", "cents", "channel"]) $(id).disabled = noShift;
     syncLoop();
@@ -428,6 +457,73 @@
     applyPlayback();
     refreshControls();
     saveSoon();
+  }
+
+  // ---- bar grid ---------------------------------------------------------------------
+
+  const gridActive = () => S.grid.on && S.grid.bpm > 0 && S.grid.origin != null;
+  const beatLen = () => 60 / S.grid.bpm;
+  const barLen = () => beatLen() * S.grid.beats;
+  // What is audible right now: the pitch engine delays the sound a little.
+  const heardTime = () => Math.max(0, video.currentTime - (audio.ok && audio.shift ? audio.latency * video.playbackRate : 0));
+
+  function snapTo(t, unit) {
+    return clamp(S.grid.origin + Math.round((t - S.grid.origin) / unit) * unit, 0, duration);
+  }
+  // Timeline gestures snap to beats when they are far enough apart on screen,
+  // otherwise to bars. Holding Alt switches snapping off.
+  function snap(t, event) {
+    if (!gridActive() || event?.altKey) return t;
+    const pxPerSec = waveBox.clientWidth / (view.end - view.start);
+    return snapTo(t, beatLen() * pxPerSec >= 8 ? beatLen() : barLen());
+  }
+  const snapBeat = (t) => (gridActive() ? snapTo(t, beatLen()) : t);
+
+  function setGrid(patch) {
+    Object.assign(S.grid, patch);
+    if (S.grid.bpm && S.grid.origin == null) S.grid.origin = 0;
+    refreshControls();
+    saveSoon();
+  }
+
+  let taps = [];
+  function tap() {
+    const now = performance.now();
+    if (taps.length && now - taps[taps.length - 1].real > 3000) taps = [];
+    taps.push({ real: now, media: video.currentTime, playing: !video.paused, heard: heardTime() });
+    if (taps.length > 12) taps.shift();
+    if (taps.length < 2) {
+      hint("Weiter im Takt tippen …", false, 2500);
+      return;
+    }
+    const first = taps[0], last = taps[taps.length - 1];
+    // Video time is independent of the playback speed; fall back to the clock
+    // when the taps span a pause or a loop jump.
+    const steady = taps.every((t, i) => t.playing && (i === 0 || t.media > taps[i - 1].media));
+    const total = steady ? last.media - first.media : ((last.real - first.real) / 1000) * (video.paused ? 1 : video.playbackRate);
+    const bpm = clamp(Math.round(600 / (total / (taps.length - 1))) / 10, 30, 300);
+    const patch = { bpm, on: true };
+    if (S.grid.origin == null) patch.origin = first.heard;
+    setGrid(patch);
+    hint(`${String(bpm).replace(".", ",")} BPM aus ${taps.length} Schlägen`, false, 2500);
+  }
+
+  function loopBars() {
+    const from = Math.round(Number($("bar-from").value)), to = Math.round(Number($("bar-to").value || $("bar-from").value));
+    if (!gridActive() || !(from >= 1) || !(to >= from)) {
+      hint(gridActive() ? "Bitte Taktnummern eingeben, z. B. 5 bis 8." : "Erst das Tempo festlegen (Tippen oder BPM).", true, 3000);
+      return;
+    }
+    const a = S.grid.origin + (from - 1) * barLen();
+    const b = Math.min(duration, S.grid.origin + to * barLen());
+    if (a < 0 || b - a < MIN_LOOP) {
+      hint("Diese Takte liegen außerhalb des Videos.", true, 3000);
+      return;
+    }
+    S.loop = { a, b, on: true };
+    syncLoop();
+    seek(a);
+    focusLoop();
   }
 
   // ---- loop ------------------------------------------------------------------------
@@ -649,20 +745,48 @@
 
     ctx.fillStyle = "rgba(0,0,0,.25)";
     ctx.fillRect(0, 0, W, ruler);
-    const step = tickStep(W / dpr / span);
     ctx.font = `${10.5 * dpr}px ui-monospace, Menlo, monospace`;
     ctx.textBaseline = "middle";
-    ctx.fillStyle = COLORS.muted;
-    ctx.strokeStyle = COLORS.line;
     ctx.lineWidth = dpr;
-    ctx.beginPath();
-    for (let t = Math.ceil(start / step) * step; t <= end; t += step) {
-      const x = Math.round(px(t)) + 0.5;
-      ctx.moveTo(x, ruler - 6 * dpr);
-      ctx.lineTo(x, ruler);
-      ctx.fillText(step < 1 ? fmt(t + 1e-6) : fmt(t + 1e-6, false), x + 4 * dpr, ruler / 2);
+    if (gridActive()) {
+      // Bar lines with numbers in the ruler, beats as short ticks when zoomed in.
+      const bar = barLen(), beat = beatLen(), origin = S.grid.origin;
+      const barPx = (bar / span) * (W / dpr);
+      let every = 1;
+      while (barPx * every < 5) every *= 2;
+      let labelEvery = every;
+      while (barPx * labelEvery < 34) labelEvery *= 2;
+      const first = Math.ceil((start - origin) / bar);
+      const last = Math.floor((end - origin) / bar);
+      if ((beat / span) * (W / dpr) >= 7) {
+        ctx.fillStyle = "rgba(255,255,255,.10)";
+        for (let i = Math.ceil((start - origin) / beat); origin + i * beat <= end; i++) {
+          if (i % S.grid.beats !== 0) ctx.fillRect(Math.round(px(origin + i * beat)), ruler, dpr, (H - ruler) * 0.3);
+        }
+      }
+      for (let i = first; i <= last; i++) {
+        if (((i % every) + every) % every !== 0) continue;
+        const x = Math.round(px(origin + i * bar));
+        ctx.fillStyle = i === 0 ? "rgba(127,212,168,.9)" : "rgba(255,255,255,.22)";
+        ctx.fillRect(x, 0, dpr, H);
+        if (i >= 0 && i % labelEvery === 0) {
+          ctx.fillStyle = COLORS.muted;
+          ctx.fillText(String(i + 1), x + 4 * dpr, ruler / 2);
+        }
+      }
+    } else {
+      const step = tickStep(W / dpr / span);
+      ctx.fillStyle = COLORS.muted;
+      ctx.strokeStyle = COLORS.line;
+      ctx.beginPath();
+      for (let t = Math.ceil(start / step) * step; t <= end; t += step) {
+        const x = Math.round(px(t)) + 0.5;
+        ctx.moveTo(x, ruler - 6 * dpr);
+        ctx.lineTo(x, ruler);
+        ctx.fillText(step < 1 ? fmt(t + 1e-6) : fmt(t + 1e-6, false), x + 4 * dpr, ruler / 2);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
 
     S.items.forEach((item, index) => {
       if (item.type === "loop") {
@@ -707,11 +831,11 @@
     const t = xToTime(x);
     if (event.shiftKey && hasLoop()) {
       const edge = Math.abs(t - S.loop.a) < Math.abs(t - S.loop.b) ? "a" : "b";
-      nudgeLoop(edge, t - S.loop[edge]);
+      nudgeLoop(edge, snap(t, event) - S.loop[edge]);
       return;
     }
     const edge = handleAt(x);
-    drag = edge ? { mode: edge } : { mode: "pending", x0: x, t0: t };
+    drag = edge ? { mode: edge } : { mode: "pending", x0: x, t0: t, s0: snap(t, event) };
     waveBox.setPointerCapture(event.pointerId);
   });
   listen(waveBox, "pointermove", (event) => {
@@ -720,14 +844,14 @@
       waveBox.style.cursor = handleAt(x) ? "ew-resize" : "crosshair";
       return;
     }
-    const t = xToTime(x);
+    const t = snap(xToTime(x), event);
     if (drag.mode === "pending") {
       if (Math.abs(x - drag.x0) < 4) return;
       drag.mode = "select";
     }
     if (drag.mode === "select") {
-      S.loop.a = Math.min(drag.t0, t);
-      S.loop.b = Math.max(drag.t0, t);
+      S.loop.a = Math.min(drag.s0, t);
+      S.loop.b = Math.max(drag.s0, t);
     } else if (drag.mode === "a") {
       S.loop.a = S.loop.b == null ? t : clamp(t, 0, S.loop.b - MIN_LOOP);
     } else {
@@ -927,6 +1051,7 @@
 
   let raf = 0;
   let lastClock = "";
+  let lastBar = "";
   let lastBucket = -1;
   let lastSpec = 0;
   let lastDraw = 0;
@@ -948,6 +1073,12 @@
     const text = fmt(t);
     if (text !== lastClock) $("time").textContent = lastClock = text;
     $("play").classList.toggle("on", !video.paused || Boolean(gapTimer));
+    let barText = S.grid.bpm ? "aus" : "–";
+    if (gridActive()) {
+      const pos = (t - S.grid.origin) / barLen();
+      barText = pos < 0 ? "–" : `${Math.floor(pos) + 1} · ${Math.floor((pos - Math.floor(pos)) * S.grid.beats + 1e-6) + 1}`;
+    }
+    if (barText !== lastBar) $("bar-out").textContent = lastBar = barText;
 
     const playing = !video.paused && !video.seeking && !adShowing();
     if (audio.ok && playing && heard) {
@@ -993,8 +1124,8 @@
   $("play").onclick = togglePlay;
   $("restart").onclick = restart;
   $("loop-toggle").onclick = toggleLoop;
-  $("set-a").onclick = () => setA(video.currentTime);
-  $("set-b").onclick = () => setB(video.currentTime);
+  $("set-a").onclick = () => setA(snapBeat(heardTime()));
+  $("set-b").onclick = () => setB(snapBeat(heardTime()));
   $("loop-prev").onclick = () => moveLoop(-1);
   $("loop-next").onclick = () => moveLoop(1);
   $("loop-half").onclick = () => scaleLoop(0.5);
@@ -1042,8 +1173,34 @@
   });
   listen($("band-low"), "input", (event) => setBand(Number(event.target.value), S.high));
   listen($("band-high"), "input", (event) => setBand(S.low, Number(event.target.value)));
+  function toggleGrid() {
+    if (!S.grid.bpm) {
+      hint("Erst das Tempo festlegen: im Takt auf „Tippen“ klicken oder BPM eintragen.", true, 3500);
+      if ($("p").querySelector('[data-sec="grid"]').classList.contains("folded")) { G.folded.grid = false; updateVisibility(); }
+      return;
+    }
+    setGrid({ on: !S.grid.on });
+  }
+  $("grid-on").onclick = toggleGrid;
+  $("tap").onclick = tap;
+  $("set-one").onclick = () => setGrid({ origin: heardTime(), on: true });
+  $("one-back").onclick = (event) => setGrid({ origin: S.grid.origin - (event.shiftKey ? 0.05 : 0.01) });
+  $("one-fwd").onclick = (event) => setGrid({ origin: S.grid.origin + (event.shiftKey ? 0.05 : 0.01) });
+  $("bar-loop").onclick = loopBars;
+  listen($("beats"), "change", (event) => setGrid({ beats: Number(event.target.value) }));
+  listen($("bpm"), "change", (event) => {
+    const value = Number(event.target.value.replace(",", "."));
+    if (!(value >= 30 && value <= 300)) {
+      event.target.classList.add("bad");
+      return;
+    }
+    event.target.classList.remove("bad");
+    event.target.blur();
+    setGrid({ bpm: Math.round(value * 100) / 100, on: true });
+  });
+  for (const id of ["bar-from", "bar-to"]) listen($(id), "keydown", (event) => { if (event.key === "Enter") loopBars(); });
   $("names").onclick = () => { G.names = G.names === "de" ? "intl" : "de"; refreshControls(); drawSpectrum(false); saveSoon(); };
-  $("add-marker").onclick = () => addItem({ type: "marker", t: video.currentTime });
+  $("add-marker").onclick = () => addItem({ type: "marker", t: heardTime() });
   $("keys").onclick = () => { G.keys = !G.keys; updateVisibility(); saveSoon(); };
   $("help-btn").onclick = () => { $("help").hidden = !$("help").hidden; if (G.collapsed) { G.collapsed = false; updateVisibility(); } };
   $("collapse").onclick = () => { G.collapsed = !G.collapsed; updateVisibility(); resize(); saveSoon(); };
@@ -1051,7 +1208,7 @@
   $("place").onclick = () => { G.place = G.place === "side" ? "below" : "side"; mount(); resize(); saveSoon(); };
   for (const panel of root.querySelectorAll("[data-sec]")) {
     panel.querySelector("h2").onclick = () => {
-      G.folded[panel.dataset.sec] = !G.folded[panel.dataset.sec];
+      G.folded[panel.dataset.sec] = !panel.classList.contains("folded");
       updateVisibility();
       resize();
       saveSoon();
@@ -1095,8 +1252,8 @@
       case "ArrowRight": seek(t + (event.altKey ? 0.1 : coarse ? 5 : 1)); break;
       case "ArrowUp": setSpeed(S.speed + 5); break;
       case "ArrowDown": setSpeed(S.speed - 5); break;
-      case "a": setA(t); break;
-      case "b": setB(t); break;
+      case "a": setA(snapBeat(heardTime())); break;
+      case "b": setB(snapBeat(heardTime())); break;
       case "l": toggleLoop(); break;
       case ",": case ";": moveLoop(-1); break;
       case ".": case ":": moveLoop(1); break;
@@ -1108,7 +1265,10 @@
       case "r": nudgeLoop("b", coarse ? 0.1 : 0.02); break;
       case "+": case "*": setPitch(S.semis + 1, S.cents); break;
       case "-": case "_": setPitch(S.semis - 1, S.cents); break;
-      case "m": addItem({ type: "marker", t }); break;
+      case "m": addItem({ type: "marker", t: heardTime() }); break;
+      case "t": tap(); break;
+      case "x": setGrid({ origin: heardTime(), on: Boolean(S.grid.bpm) }); break;
+      case "g": toggleGrid(); break;
       case "s": saveLoop(); break;
       case "z": zoomToLoop(); break;
       case "f": setView(0, duration); break;
