@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Waveform with a highlighted A/B loop region: the core of the looper.
+       Used for 48 and 128 px; icon-32.svg and icon-16.svg are pixel-aligned variants. -->
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="#171c21"/>
+  <rect x="8.75" y="8.75" width="110.5" height="110.5" rx="25.25" fill="none" stroke="#2a333c" stroke-width="1.5"/>
+  <rect x="40" y="28" width="48" height="72" fill="#f4b740" fill-opacity="0.16"/>
+  <g stroke-linecap="round">
+    <g stroke="#5f7385" stroke-width="6">
+      <line x1="20" y1="54" x2="20" y2="74"/>
+      <line x1="29" y1="47" x2="29" y2="81"/>
+      <line x1="99" y1="49" x2="99" y2="79"/>
+      <line x1="108" y1="56" x2="108" y2="72"/>
+    </g>
+    <g stroke="#f4b740" stroke-width="8">
+      <line x1="52" y1="46" x2="52" y2="82"/>
+      <line x1="64" y1="38" x2="64" y2="90"/>
+      <line x1="76" y1="48" x2="76" y2="80"/>
+    </g>
+  </g>
+  <g fill="#f4b740">
+    <rect x="37" y="24" width="5" height="80" rx="2.5"/>
+    <rect x="86" y="24" width="5" height="80" rx="2.5"/>
+    <path d="M40 24h12l-5 6 5 6H40z"/>
+    <path d="M88 24H76l5 6-5 6h12z"/>
+  </g>
+</svg>
