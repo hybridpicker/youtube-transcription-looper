@@ -140,7 +140,7 @@ Die Tonanzeige verwendet auf Englisch die internationalen Namen (`B`), auf Deuts
 
 ## Entwicklung
 
-Es gibt keinen Build-Schritt: Die Erweiterung besteht aus reinem JavaScript, HTML und CSS. Der Aufbau ist in der [englischen README](README.md#development) beschrieben, Beiträge sind willkommen (siehe [CONTRIBUTING.md](CONTRIBUTING.md)). Die ursprüngliche erste Version liegt in der Git-Historie (zuletzt in Commit `6554d9e`, Ordner `legacy-v1/`).
+Es gibt keinen Build-Schritt: Die Erweiterung besteht aus reinem JavaScript, HTML und CSS. Der Aufbau ist in der [englischen README](README.md#development) beschrieben, Beiträge sind willkommen (siehe [CONTRIBUTING.md](CONTRIBUTING.md)). Die ursprüngliche erste Version liegt in der Git-Historie (zuletzt in Commit `93455e4`, Ordner `legacy-v1/`).
 
 ## Lizenz
 

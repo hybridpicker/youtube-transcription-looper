@@ -158,7 +158,7 @@ There is no build step: the extension is plain JavaScript, HTML and CSS.
 | `scripts/package.sh` | Builds the release ZIP in `dist/` |
 | `scripts/demo-audio.py` | Writes a synthetic demo track for testing and screenshots |
 
-Contributions are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). The original first version of the extension is kept in the Git history (last present in commit `6554d9e`, folder `legacy-v1/`).
+Contributions are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). The original first version of the extension is kept in the Git history (last present in commit `93455e4`, folder `legacy-v1/`).
 
 ## License
 
