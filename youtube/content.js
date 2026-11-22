@@ -4,6 +4,8 @@
   "use strict";
 
   const { clamp, fmt, parseTime, tickStep, NAMES, NOTE_LOW, NOTE_HIGH, strongestNotes, guessChord } = globalThis.TL;
+  const I18N = globalThis.TL_I18N;
+  const { t, num } = I18N;
 
   // A previous copy of this script survives an extension reload; replace it.
   window.__ytlInstance?.destroy();
@@ -19,7 +21,9 @@
 
   const fresh = () => ({ loop: { a: null, b: null, on: false }, speed: 100, semis: 0, cents: 0, gap: 0, chan: 0, low: 0, high: 1000, items: [], grid: { on: false, bpm: null, beats: 4, origin: null } });
   let S = fresh();
-  const G = { open: false, keys: true, names: "de", collapsed: false, place: "side", folded: {} };
+  const G = { open: false, keys: true, names: null, lang: null, collapsed: false, place: "side", folded: {} };
+  // Note naming follows the language unless the user picked one (B or H).
+  const nameSet = () => G.names || (I18N.lang === "de" ? "de" : "intl");
   let video = null;
   let videoId = null;
   let duration = 0;
@@ -60,140 +64,153 @@
   root.innerHTML = `
     <div class="p" id="p">
       <div class="head">
-        <span class="logo"></span><b>Transkriptions-Looper</b>
+        <span class="logo"></span><b data-i18n="appName"></b>
         <span class="hint" id="hint"></span>
-        <button id="keys" class="btn ghost" title="Tastenkürzel des Loopers ein/aus. Aus: YouTubes eigene Tasten gelten wieder.">Tasten</button>
-        <button id="help-btn" class="btn ghost" title="Tastenkürzel anzeigen">?</button>
-        <button id="files" class="btn ghost" title="Werkstatt für Audiodateien in neuem Tab öffnen">Datei</button>
-        <button id="place" class="btn ghost icon" title="Position wechseln: neben oder unter dem Video"></button>
-        <button id="collapse" class="btn ghost icon" title="Regler ein-/ausklappen">▾</button>
-        <button id="close" class="btn ghost icon" title="Looper schließen">×</button>
+        <button id="keys" class="btn ghost" data-i18n="keys" data-i18n-title="keysTitle"></button>
+        <button id="help-btn" class="btn ghost" data-i18n-title="helpBtnTitle">?</button>
+        <button id="files" class="btn ghost" data-i18n="files" data-i18n-title="filesTitle"></button>
+        <button id="lang" class="btn ghost" data-i18n-title="langTitle"></button>
+        <button id="place" class="btn ghost icon" data-i18n-title="placeTitle"></button>
+        <button id="collapse" class="btn ghost icon" data-i18n-title="collapseTitle">▾</button>
+        <button id="close" class="btn ghost icon" data-i18n-title="closeTitle">×</button>
       </div>
       <div class="wave" id="wave-box"><canvas id="wave"></canvas><div id="playhead" class="playhead"></div></div>
       <div class="transport">
-        <button id="play" class="play" title="Wiedergabe / Pause (Leertaste)" aria-label="Wiedergabe"></button>
-        <button id="restart" class="btn icon" title="Zum Loop-Anfang (Enter)">⏮</button>
+        <button id="play" class="play" data-i18n-title="playTitle" data-i18n-aria="play"></button>
+        <button id="restart" class="btn icon" data-i18n-title="restartTitle">⏮</button>
         <div class="clock"><span id="time">0:00.00</span><span class="muted" id="total"></span></div>
         <div class="group">
-          <button id="loop-toggle" class="btn" title="Loop ein/aus (L)">Loop</button>
-          <button id="set-a" class="btn" title="Anfang an der Abspielposition (A)">A</button>
-          <input id="loop-a" class="time-input" inputmode="decimal" aria-label="Loop-Anfang" placeholder="–:––.––">
-          <input id="loop-b" class="time-input" inputmode="decimal" aria-label="Loop-Ende" placeholder="–:––.––">
-          <button id="set-b" class="btn" title="Ende an der Abspielposition (B)">B</button>
+          <button id="loop-toggle" class="btn" data-i18n-title="loopToggleTitle">Loop</button>
+          <button id="set-a" class="btn" data-i18n-title="setATitle">A</button>
+          <input id="loop-a" class="time-input" inputmode="decimal" data-i18n-aria="loopStart" placeholder="–:––.––">
+          <input id="loop-b" class="time-input" inputmode="decimal" data-i18n-aria="loopEnd" placeholder="–:––.––">
+          <button id="set-b" class="btn" data-i18n-title="setBTitle">B</button>
           <span class="sep"></span>
-          <button id="loop-prev" class="btn icon" title="Loop um seine Länge zurück (,)">◀</button>
-          <button id="loop-next" class="btn icon" title="Loop um seine Länge weiter (.)">▶</button>
-          <button id="loop-half" class="btn" title="Loop halbieren (H)">½</button>
-          <button id="loop-double" class="btn" title="Loop verdoppeln (D)">×2</button>
-          <button id="loop-clear" class="btn ghost" title="Loop entfernen"><span class="ic">✕</span><span class="tx">Entfernen</span></button>
+          <button id="loop-prev" class="btn icon" data-i18n-title="loopPrevTitle">◀</button>
+          <button id="loop-next" class="btn icon" data-i18n-title="loopNextTitle">▶</button>
+          <button id="loop-half" class="btn" data-i18n-title="loopHalfTitle">½</button>
+          <button id="loop-double" class="btn" data-i18n-title="loopDoubleTitle">×2</button>
+          <button id="loop-clear" class="btn ghost" data-i18n-title="loopClearTitle"><span class="ic">✕</span><span class="tx" data-i18n="remove"></span></button>
         </div>
         <div class="group right">
-          <button id="zoom-out" class="btn icon" title="Herauszoomen">−</button>
-          <button id="zoom-in" class="btn icon" title="Hineinzoomen">+</button>
-          <button id="zoom-loop" class="btn" title="Auf den Loop zoomen (Z)">Loop</button>
-          <button id="zoom-fit" class="btn" title="Ganzes Video zeigen (F)">Alles</button>
+          <button id="zoom-out" class="btn icon" data-i18n-title="zoomOut">−</button>
+          <button id="zoom-in" class="btn icon" data-i18n-title="zoomIn">+</button>
+          <button id="zoom-loop" class="btn" data-i18n-title="zoomLoopTitle">Loop</button>
+          <button id="zoom-fit" class="btn" data-i18n="all" data-i18n-title="zoomFitVideo"></button>
         </div>
       </div>
       <div class="help more" id="help" hidden>
-        <div><span><kbd>Leertaste</kbd></span><span>Wiedergabe / Pause</span></div>
-        <div><span><kbd>Enter</kbd></span><span>Zum Loop-Anfang</span></div>
-        <div><span><kbd>←</kbd> <kbd>→</kbd></span><span>1 s (Shift: 5 s, Alt: 0,1 s)</span></div>
-        <div><span><kbd>A</kbd> <kbd>B</kbd></span><span>Loop-Anfang / -Ende setzen</span></div>
-        <div><span><kbd>L</kbd></span><span>Loop ein / aus</span></div>
-        <div><span><kbd>,</kbd> <kbd>.</kbd></span><span>Loop zurück / weiter schieben</span></div>
-        <div><span><kbd>H</kbd> <kbd>D</kbd></span><span>Loop halbieren / verdoppeln</span></div>
-        <div><span><kbd>Q</kbd> <kbd>W</kbd></span><span>Anfang früher / später</span></div>
-        <div><span><kbd>E</kbd> <kbd>R</kbd></span><span>Ende früher / später</span></div>
-        <div><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>Tempo ±5 %</span></div>
-        <div><span><kbd>+</kbd> <kbd>−</kbd></span><span>Tonhöhe ±1 Halbton</span></div>
-        <div><span><kbd>M</kbd> <kbd>S</kbd></span><span>Marker / Loop speichern</span></div>
-        <div><span><kbd>T</kbd> <kbd>X</kbd></span><span>Tempo tippen / Eins setzen</span></div>
-        <div><span><kbd>G</kbd></span><span>Taktraster ein / aus</span></div>
-        <div><span><kbd>1</kbd>–<kbd>9</kbd></span><span>Gespeicherte Stelle</span></div>
-        <div><span><kbd>Z</kbd> <kbd>F</kbd></span><span>Zoom auf Loop / alles</span></div>
-        <p class="muted small">Zeitleiste: Klick = springen · Ziehen = Loop aufziehen · Shift+Klick = nächste Loop-Grenze versetzen · Strg/⌘+Mausrad = zoomen · Alt beim Ziehen = ohne Einrasten. Die Wellenform entsteht beim Abspielen.</p>
+        <div><span><kbd data-i18n="kSpace"></kbd></span><span data-i18n="hPlay"></span></div>
+        <div><span><kbd>Enter</kbd></span><span data-i18n="hRestart"></span></div>
+        <div><span><kbd>←</kbd> <kbd>→</kbd></span><span data-i18n="hSeekShort"></span></div>
+        <div><span><kbd>A</kbd> <kbd>B</kbd></span><span data-i18n="hABShort"></span></div>
+        <div><span><kbd>L</kbd></span><span data-i18n="hLoop"></span></div>
+        <div><span><kbd>,</kbd> <kbd>.</kbd></span><span data-i18n="hMoveShort"></span></div>
+        <div><span><kbd>H</kbd> <kbd>D</kbd></span><span data-i18n="hScale"></span></div>
+        <div><span><kbd>Q</kbd> <kbd>W</kbd></span><span data-i18n="hNudgeAShort"></span></div>
+        <div><span><kbd>E</kbd> <kbd>R</kbd></span><span data-i18n="hNudgeBShort"></span></div>
+        <div><span><kbd>↑</kbd> <kbd>↓</kbd></span><span data-i18n="hTempo"></span></div>
+        <div><span><kbd>+</kbd> <kbd>−</kbd></span><span data-i18n="hPitch"></span></div>
+        <div><span><kbd>M</kbd> <kbd>S</kbd></span><span data-i18n="hMarkerLoop"></span></div>
+        <div><span><kbd>T</kbd> <kbd>X</kbd></span><span data-i18n="hTapOne"></span></div>
+        <div><span><kbd>G</kbd></span><span data-i18n="hGrid"></span></div>
+        <div><span><kbd>1</kbd>–<kbd>9</kbd></span><span data-i18n="hRecallShort"></span></div>
+        <div><span><kbd>Z</kbd> <kbd>F</kbd></span><span data-i18n="hZoom"></span></div>
+        <p class="muted small" data-i18n="helpTimeline"></p>
       </div>
       <div class="panels more">
         <div data-sec="tempo" class="panel">
-          <div class="panel-head"><h2>Tempo</h2><output id="speed-out" class="reset" title="Klick: zurück auf 100 %">100 %</output></div>
-          <input id="speed" type="range" min="10" max="200" step="1" value="100" aria-label="Tempo in Prozent">
+          <div class="panel-head"><h2 data-i18n="tempo"></h2><output id="speed-out" class="reset" data-i18n-title="speedResetTitle">100 %</output></div>
+          <input id="speed" type="range" min="10" max="200" step="1" value="100" data-i18n-aria="tempoAria">
           <div class="chips" id="speed-chips">
             <button data-v="25">25</button><button data-v="35">35</button><button data-v="50">50</button><button data-v="60">60</button>
             <button data-v="70">70</button><button data-v="80">80</button><button data-v="90">90</button><button data-v="100">100</button>
           </div>
-          <div class="field" title="Pause zwischen den Loop-Durchläufen"><span>Pause</span>
-            <input id="gap" type="range" min="0" max="5" step="0.25" value="0" aria-label="Pause zwischen Loop-Durchläufen"><output id="gap-out">0 s</output></div>
+          <div class="field" data-i18n-title="gapAria"><span data-i18n="gapShort"></span>
+            <input id="gap" type="range" min="0" max="5" step="0.25" value="0" data-i18n-aria="gapAria"><output id="gap-out">0 s</output></div>
         </div>
         <div data-sec="pitch" class="panel">
-          <div class="panel-head"><h2>Tonhöhe</h2><output id="pitch-out" class="reset" title="Klick: zurück auf Originaltonhöhe">±0</output></div>
+          <div class="panel-head"><h2 data-i18n="pitch"></h2><output id="pitch-out" class="reset" data-i18n-title="pitchResetTitle">±0</output></div>
           <div class="stepper">
-            <button id="pitch-oct-down" class="btn" title="Oktave tiefer">−12</button>
-            <button id="pitch-down" class="btn" title="Halbton tiefer">−1</button>
-            <button id="pitch-reset" class="btn ghost">Original</button>
-            <button id="pitch-up" class="btn" title="Halbton höher">+1</button>
-            <button id="pitch-oct-up" class="btn" title="Oktave höher">+12</button>
+            <button id="pitch-oct-down" class="btn" data-i18n-title="octDown">−12</button>
+            <button id="pitch-down" class="btn" data-i18n-title="semiDown">−1</button>
+            <button id="pitch-reset" class="btn ghost" data-i18n="original"></button>
+            <button id="pitch-up" class="btn" data-i18n-title="semiUp">+1</button>
+            <button id="pitch-oct-up" class="btn" data-i18n-title="octUp">+12</button>
           </div>
-          <div class="field" title="Feinstimmung in Cent"><span>Fein</span>
-            <input id="cents" type="range" min="-50" max="50" step="1" value="0" aria-label="Feinstimmung in Cent"><output id="cents-out">0 Cent</output></div>
+          <div class="field" data-i18n-title="fineAria"><span data-i18n="fineShort"></span>
+            <input id="cents" type="range" min="-50" max="50" step="1" value="0" data-i18n-aria="fineAria"><output id="cents-out">0</output></div>
         </div>
         <div data-sec="sound" class="panel">
-          <div class="panel-head"><h2>Klang</h2>
-            <select id="channel" aria-label="Kanal">
-              <option value="0">Stereo</option><option value="1">Nur links</option><option value="2">Nur rechts</option>
-              <option value="3">Mono</option><option value="4">Mitte entfernt</option>
+          <div class="panel-head"><h2 data-i18n="sound"></h2>
+            <select id="channel" data-i18n-aria="channel">
+              <option value="0" data-i18n="stereo"></option><option value="1" data-i18n="leftOnly"></option><option value="2" data-i18n="rightOnly"></option>
+              <option value="3" data-i18n="mono"></option><option value="4" data-i18n="centerRemoved"></option>
             </select>
           </div>
           <div class="chips" id="focus-chips">
-            <button data-low="20" data-high="20000">Alles</button><button data-low="20" data-high="260">Bass</button>
-            <button data-low="200" data-high="2500">Mitten</button><button data-low="1800" data-high="20000">Höhen</button>
+            <button data-low="20" data-high="20000" data-i18n="all"></button><button data-low="20" data-high="260" data-i18n="bass"></button>
+            <button data-low="200" data-high="2500" data-i18n="mids"></button><button data-low="1800" data-high="20000" data-i18n="highs"></button>
           </div>
-          <div class="field band" title="Hörbarer Frequenzbereich: untere und obere Grenze"><span>Bereich</span>
+          <div class="field band" data-i18n-title="rangeTitle"><span data-i18n="rangeShort"></span>
             <div class="dual">
-              <input id="band-low" type="range" min="0" max="1000" step="1" value="0" aria-label="Untere Grenzfrequenz">
-              <input id="band-high" type="range" min="0" max="1000" step="1" value="1000" aria-label="Obere Grenzfrequenz">
-            </div><output id="band-out">alles</output></div>
+              <input id="band-low" type="range" min="0" max="1000" step="1" value="0" data-i18n-aria="lowCut">
+              <input id="band-high" type="range" min="0" max="1000" step="1" value="1000" data-i18n-aria="highCut">
+            </div><output id="band-out"></output></div>
         </div>
         <div data-sec="grid" class="panel">
-          <div class="panel-head"><h2>Takte</h2><output id="bar-out" title="Aktueller Takt · Schlag">–</output></div>
+          <div class="panel-head"><h2 data-i18n="bars"></h2><output id="bar-out" data-i18n-title="barOutTitle">–</output></div>
           <div class="gridrow">
-            <button id="grid-on" class="btn" title="Taktraster und Einrasten ein/aus (G)">Raster</button>
-            <input id="bpm" class="time-input num" inputmode="decimal" placeholder="BPM" aria-label="Tempo in Schlägen pro Minute" title="Tempo in Schlägen pro Minute">
-            <button id="tap" class="btn" title="Im Takt mitklicken oder T drücken – das Tempo wird daraus berechnet">Tippen</button>
-            <button id="set-one" class="btn" title="Die Eins von Takt 1 an die Abspielposition setzen (X)">1 hier</button>
-            <select id="beats" aria-label="Schläge pro Takt" title="Schläge pro Takt">
-              <option value="2">2er</option><option value="3">3er</option><option value="4">4er</option><option value="5">5er</option>
-              <option value="6">6er</option><option value="7">7er</option><option value="9">9er</option><option value="12">12er</option>
+            <button id="grid-on" class="btn" data-i18n="gridBtn" data-i18n-title="gridOnTitle"></button>
+            <input id="bpm" class="time-input num" inputmode="decimal" placeholder="BPM" data-i18n-aria="bpmAria" data-i18n-title="bpmAria">
+            <button id="tap" class="btn" data-i18n="tap" data-i18n-title="tapTitle"></button>
+            <button id="set-one" class="btn" data-i18n="setOne" data-i18n-title="setOneTitle"></button>
+            <select id="beats" data-i18n-aria="beatsAria" data-i18n-title="beatsAria">
+              ${[2, 3, 4, 5, 6, 7, 9, 12].map((n) => `<option value="${n}"></option>`).join("")}
             </select>
           </div>
           <div class="gridrow">
-            <span class="muted">Takt</span>
-            <input id="bar-from" class="time-input num" inputmode="numeric" aria-label="Loop ab Takt" placeholder="von">
-            <span class="muted">bis</span>
-            <input id="bar-to" class="time-input num" inputmode="numeric" aria-label="Loop bis Takt" placeholder="bis">
-            <button id="bar-loop" class="btn" title="Diese Takte als Loop setzen">Als Loop</button>
+            <span class="muted" data-i18n="bar"></span>
+            <input id="bar-from" class="time-input num" inputmode="numeric" data-i18n-aria="barFromAria" data-i18n-placeholder="from">
+            <span class="muted" data-i18n="to"></span>
+            <input id="bar-to" class="time-input num" inputmode="numeric" data-i18n-aria="barToAria" data-i18n-placeholder="to">
+            <button id="bar-loop" class="btn" data-i18n="asLoop" data-i18n-title="asLoopTitle"></button>
             <span class="sp"></span>
-            <button id="one-back" class="btn icon" title="Raster 10 ms früher (Shift: 50 ms)">◂</button>
-            <button id="one-fwd" class="btn icon" title="Raster 10 ms später (Shift: 50 ms)">▸</button>
+            <button id="one-back" class="btn icon" data-i18n-title="oneBackTitle">◂</button>
+            <button id="one-fwd" class="btn icon" data-i18n-title="oneFwdTitle">▸</button>
           </div>
         </div>
       </div>
       <div class="bottom more">
         <div data-sec="notes" class="panel spec">
-          <div class="panel-head"><h2>Töne (live)</h2>
-            <div class="head-right"><span id="chord" class="chord" title="Geschätzter Akkord – nur ein Hinweis"></span>
-              <button id="names" class="btn ghost" title="Notennamen umschalten">H</button></div>
+          <div class="panel-head"><h2 data-i18n="notesLive"></h2>
+            <div class="head-right"><span id="chord" class="chord" data-i18n-title="chordTitle"></span>
+              <button id="names" class="btn ghost" data-i18n-title="namesTitle">H</button></div>
           </div>
           <canvas id="spectrum"></canvas>
         </div>
         <div data-sec="places" class="panel">
-          <div class="panel-head"><h2>Stellen</h2><div class="head-right"><button id="loop-save" class="btn" title="Aktuellen Loop in die Liste speichern (S)">+ Loop</button><button id="add-marker" class="btn" title="Marker an der Abspielposition (M)">+ Marker</button></div></div>
+          <div class="panel-head"><h2 data-i18n="places"></h2><div class="head-right"><button id="loop-save" class="btn" data-i18n="addLoop" data-i18n-title="loopSaveTitle"></button><button id="add-marker" class="btn" data-i18n="addMarker" data-i18n-title="markerTitle"></button></div></div>
           <ol id="items" class="items"></ol>
-          <span id="items-empty" class="muted small"><kbd>M</kbd> setzt einen Marker, <kbd>S</kbd> speichert den aktuellen Loop.</span>
+          <span id="items-empty" class="muted small" data-i18n-html="itemsEmptyPanel"></span>
         </div>
       </div>
     </div>`;
   const $ = (id) => root.getElementById(id);
   const waveBox = $("wave-box");
+
+  // Fills all static texts in the current language and refreshes the dynamic ones.
+  function applyLanguage() {
+    I18N.setLang(G.lang);
+    I18N.apply(root);
+    $("lang").textContent = I18N.lang === "de" ? "EN" : "DE";
+    for (const option of $("beats").options) option.textContent = t("beatsOption", { n: option.value });
+    lastBar = "";
+    refreshControls();
+    renderItems();
+    statusHint();
+    drawSpectrum(false);
+  }
 
   // Preferred spot is the sidebar next to the player, so video and controls
   // are visible together. That only works in YouTube's two-column layout;
@@ -225,10 +242,10 @@
     if (ms) hintTimer = setTimeout(statusHint, ms);
   }
   function statusHint() {
-    if (!video) hint("Kein Video auf dieser Seite gefunden.");
-    else if (audio.failed) hint("Klangbearbeitung nicht verfügbar – Tempo und Loop funktionieren. Seite neu laden hilft meist.", true);
-    else if (!audio.ok) hint("Einmal ins Bedienfeld klicken, um Tonhöhe, Filter und Tonanzeige zu aktivieren.");
-    else if (!audio.shift) hint("Tonhöhenänderung in diesem Tab nicht verfügbar.", true);
+    if (!video) hint(t("noVideo"));
+    else if (audio.failed) hint(t("audioFailed"), true);
+    else if (!audio.ok) hint(t("clickToActivate"));
+    else if (!audio.shift) hint(t("noShift"), true);
     else hint("");
   }
 
@@ -345,7 +362,7 @@
         audio.node.port.onmessage = (event) => { audio.latency = event.data.latency; };
         audio.shift = true;
       } catch (error) {
-        console.warn("[Transkriptions-Looper] Pitch engine unavailable:", error);
+        console.warn("[Transcription Looper] Pitch engine unavailable:", error);
         audio.shift = false;
       }
       const filter = (type, frequency) => new BiquadFilterNode(ctx, { type, frequency, Q: 0.707 });
@@ -360,7 +377,7 @@
       tail.connect(ctx.destination);
       audio.ok = true;
     } catch (error) {
-      console.warn("[Transkriptions-Looper] Audio processing unavailable:", error);
+      console.warn("[Transcription Looper] Audio processing unavailable:", error);
       audio.failed = true;
       // Never leave the player silent.
       try { audio.source?.connect(audio.ctx.destination); } catch { /* nothing more to do */ }
@@ -413,20 +430,20 @@
     $("speed-out").textContent = `${S.speed} %`;
     for (const b of $("speed-chips").children) b.classList.toggle("on", Number(b.dataset.v) === S.speed);
     $("gap").value = S.gap;
-    $("gap-out").textContent = `${String(S.gap).replace(".", ",")} s`;
+    $("gap-out").textContent = `${num(S.gap)} s`;
     $("cents").value = S.cents;
-    $("pitch-out").textContent = S.semis === 0 ? "±0" : `${S.semis > 0 ? "+" : "−"}${Math.abs(S.semis)} HT`;
-    $("cents-out").textContent = `${S.cents > 0 ? "+" : ""}${S.cents} Cent`;
+    $("pitch-out").textContent = S.semis === 0 ? "±0" : `${S.semis > 0 ? "+" : "−"}${Math.abs(S.semis)} ${t("semitoneUnit")}`;
+    $("cents-out").textContent = `${S.cents > 0 ? "+" : ""}${S.cents} ${t("centUnit")}`;
     $("channel").value = S.chan;
     $("band-low").value = S.low;
     $("band-high").value = S.high;
-    const hz = (v) => { const f = bandHz(v); return f >= 1000 ? `${(f / 1000).toFixed(1).replace(".", ",")} kHz` : `${Math.round(f)} Hz`; };
-    $("band-out").textContent = S.low <= 0 && S.high >= 1000 ? "alles" : `${hz(S.low)} – ${hz(S.high)}`;
+    const hz = (v) => { const f = bandHz(v); return f >= 1000 ? `${num((f / 1000).toFixed(1))} kHz` : `${Math.round(f)} Hz`; };
+    $("band-out").textContent = S.low <= 0 && S.high >= 1000 ? t("bandFull") : `${hz(S.low)} – ${hz(S.high)}`;
     const near = (v, target) => Math.abs(bandHz(v) / target - 1) < 0.01;
     for (const b of $("focus-chips").children) b.classList.toggle("on", near(S.low, b.dataset.low) && near(S.high, b.dataset.high));
-    $("names").textContent = G.names === "de" ? "H" : "B";
+    $("names").textContent = nameSet() === "de" ? "H" : "B";
     $("grid-on").classList.toggle("on", gridActive());
-    if (root.activeElement !== $("bpm")) $("bpm").value = S.grid.bpm ? String(S.grid.bpm).replace(".", ",") : "";
+    if (root.activeElement !== $("bpm")) $("bpm").value = S.grid.bpm ? num(S.grid.bpm) : "";
     $("beats").value = S.grid.beats;
     for (const id of ["set-one", "one-back", "one-fwd", "bar-loop"]) $(id).disabled = !S.grid.bpm;
     const noShift = audio.ok && !audio.shift;
@@ -493,7 +510,7 @@
     taps.push({ real: now, media: video.currentTime, playing: !video.paused, heard: heardTime() });
     if (taps.length > 12) taps.shift();
     if (taps.length < 2) {
-      hint("Weiter im Takt tippen …", false, 2500);
+      hint(t("keepTapping"), false, 2500);
       return;
     }
     const first = taps[0], last = taps[taps.length - 1];
@@ -505,19 +522,19 @@
     const patch = { bpm, on: true };
     if (S.grid.origin == null) patch.origin = first.heard;
     setGrid(patch);
-    hint(`${String(bpm).replace(".", ",")} BPM aus ${taps.length} Schlägen`, false, 2500);
+    hint(t("bpmFrom", { bpm: num(bpm), n: taps.length }), false, 2500);
   }
 
   function loopBars() {
     const from = Math.round(Number($("bar-from").value)), to = Math.round(Number($("bar-to").value || $("bar-from").value));
     if (!gridActive() || !(from >= 1) || !(to >= from)) {
-      hint(gridActive() ? "Bitte Taktnummern eingeben, z. B. 5 bis 8." : "Erst das Tempo festlegen (Tippen oder BPM).", true, 3000);
+      hint(gridActive() ? t("enterBars") : t("tempoFirst"), true, 3000);
       return;
     }
     const a = S.grid.origin + (from - 1) * barLen();
     const b = Math.min(duration, S.grid.origin + to * barLen());
     if (a < 0 || b - a < MIN_LOOP) {
-      hint("Diese Takte liegen außerhalb des Videos.", true, 3000);
+      hint(t("barsOutside"), true, 3000);
       return;
     }
     S.loop = { a, b, on: true };
@@ -561,7 +578,7 @@
   function setB(t) {
     if (S.loop.a == null) S.loop.a = 0;
     if (t - S.loop.a < MIN_LOOP) {
-      hint("Das Ende muss hinter dem Anfang liegen.", true, 2500);
+      hint(t("endAfterStart"), true, 2500);
       return;
     }
     S.loop.b = clamp(t, 0, duration);
@@ -572,7 +589,7 @@
   }
   function toggleLoop() {
     if (!hasLoop()) {
-      hint("Erst in der Zeitleiste einen Bereich aufziehen oder A und B setzen.", true, 3000);
+      hint(t("noLoopTimeline"), true, 3000);
       return;
     }
     S.loop.on = !S.loop.on;
@@ -926,7 +943,7 @@
     const strong = strongestNotes(levels, -75);
     const strongSet = new Set(strong.map((s) => s.note));
     const chord = guessChord(levels, -70);
-    $("chord").textContent = chord ? `≈ ${NAMES[G.names][chord.root]}${chord.suffix}` : "";
+    $("chord").textContent = chord ? `≈ ${NAMES[nameSet()][chord.root]}${chord.suffix}` : "";
 
     const ctx = c.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
@@ -946,7 +963,7 @@
       ctx.fillRect(x + dpr, H - keysH - h - 2 * dpr, col - 2 * dpr, h);
       if (on) {
         ctx.font = `700 ${10.5 * dpr}px system-ui, sans-serif`;
-        ctx.fillText(NAMES[G.names][note % 12] + (Math.floor(note / 12) - 1), x + col / 2, H - keysH - h - 5 * dpr);
+        ctx.fillText(NAMES[nameSet()][note % 12] + (Math.floor(note / 12) - 1), x + col / 2, H - keysH - h - 5 * dpr);
       }
       const black = isBlack(note);
       ctx.fillStyle = on ? COLORS.accent : black ? "#07090b" : "#d5dbe1";
@@ -999,7 +1016,7 @@
   function saveLoop() {
     if (!hasLoop()) return;
     addItem({ type: "loop", a: S.loop.a, b: S.loop.b });
-    hint("Loop gespeichert.", false, 1800);
+    hint(t("loopSaved"), false, 1800);
   }
   function recall(item) {
     if (item.type === "loop") {
@@ -1027,13 +1044,13 @@
       when.textContent = item.type === "loop" ? `${fmt(item.a)} – ${fmt(item.b)}` : fmt(item.t);
       const label = document.createElement("input");
       label.value = item.label;
-      label.placeholder = item.type === "loop" ? "Loop benennen …" : "Marker benennen …";
+      label.placeholder = item.type === "loop" ? t("nameLoop") : t("nameMarker");
       label.addEventListener("input", () => { item.label = label.value; saveSoon(); });
       label.addEventListener("click", (event) => event.stopPropagation());
       const del = document.createElement("button");
       del.className = "del";
       del.textContent = "×";
-      del.title = "Löschen";
+      del.title = t("delete");
       del.addEventListener("click", (event) => {
         event.stopPropagation();
         S.items = S.items.filter((other) => other !== item);
@@ -1073,7 +1090,7 @@
     const text = fmt(t);
     if (text !== lastClock) $("time").textContent = lastClock = text;
     $("play").classList.toggle("on", !video.paused || Boolean(gapTimer));
-    let barText = S.grid.bpm ? "aus" : "–";
+    let barText = S.grid.bpm ? t("gridOff") : "–";
     if (gridActive()) {
       const pos = (t - S.grid.origin) / barLen();
       barText = pos < 0 ? "–" : `${Math.floor(pos) + 1} · ${Math.floor((pos - Math.floor(pos)) * S.grid.beats + 1e-6) + 1}`;
@@ -1175,7 +1192,7 @@
   listen($("band-high"), "input", (event) => setBand(S.low, Number(event.target.value)));
   function toggleGrid() {
     if (!S.grid.bpm) {
-      hint("Erst das Tempo festlegen: im Takt auf „Tippen“ klicken oder BPM eintragen.", true, 3500);
+      hint(t("tempoFirstLong"), true, 3500);
       if ($("p").querySelector('[data-sec="grid"]').classList.contains("folded")) { G.folded.grid = false; updateVisibility(); }
       return;
     }
@@ -1199,12 +1216,13 @@
     setGrid({ bpm: Math.round(value * 100) / 100, on: true });
   });
   for (const id of ["bar-from", "bar-to"]) listen($(id), "keydown", (event) => { if (event.key === "Enter") loopBars(); });
-  $("names").onclick = () => { G.names = G.names === "de" ? "intl" : "de"; refreshControls(); drawSpectrum(false); saveSoon(); };
+  $("names").onclick = () => { G.names = nameSet() === "de" ? "intl" : "de"; refreshControls(); drawSpectrum(false); saveSoon(); };
   $("add-marker").onclick = () => addItem({ type: "marker", t: heardTime() });
   $("keys").onclick = () => { G.keys = !G.keys; updateVisibility(); saveSoon(); };
   $("help-btn").onclick = () => { $("help").hidden = !$("help").hidden; if (G.collapsed) { G.collapsed = false; updateVisibility(); } };
   $("collapse").onclick = () => { G.collapsed = !G.collapsed; updateVisibility(); resize(); saveSoon(); };
   $("close").onclick = () => setOpen(false);
+  $("lang").onclick = () => { G.lang = I18N.lang === "de" ? "en" : "de"; applyLanguage(); saveSoon(); };
   $("place").onclick = () => { G.place = G.place === "side" ? "below" : "side"; mount(); resize(); saveSoon(); };
   for (const panel of root.querySelectorAll("[data-sec]")) {
     panel.querySelector("h2").onclick = () => {
@@ -1231,7 +1249,7 @@
   }
 
   // Keyboard: while the panel is open its shortcuts take precedence over
-  // YouTube's single-key shortcuts (toggle with the "Tasten" button).
+  // YouTube's single-key shortcuts (toggle with the "Keys" button).
   const swallowed = new Set();
   listen(window, "keydown", (event) => {
     if (!G.open || !G.keys || !video || host.hidden || event.metaKey || event.ctrlKey) return;
@@ -1335,6 +1353,7 @@
 
   load("ytl:global").then((data) => {
     Object.assign(G, data["ytl:global"]);
+    applyLanguage();
     bind();
     updateVisibility();
     raf = requestAnimationFrame(frame);

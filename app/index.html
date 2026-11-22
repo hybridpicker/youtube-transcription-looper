@@ -1,29 +1,30 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Transkriptions-Werkstatt</title>
+  <title>Transcription Workstation</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../icons/icon-32.png">
   <link rel="icon" type="image/svg+xml" href="../icons/icon.svg">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <header class="top">
-    <div class="brand"><span class="logo" aria-hidden="true"></span>Transkriptions-Werkstatt</div>
-    <div class="file" id="file-name">Keine Datei geladen</div>
+    <div class="brand"><span class="logo" aria-hidden="true"></span><span data-i18n="workstation"></span></div>
+    <div class="file" id="file-name" data-i18n="noFile"></div>
     <div class="top-actions">
-      <button id="open" class="btn">Datei öffnen</button>
-      <button id="help-btn" class="btn ghost" title="Tastenkürzel (?)">Tastenkürzel</button>
+      <button id="open" class="btn" data-i18n="openFile"></button>
+      <button id="help-btn" class="btn ghost" data-i18n="shortcuts" data-i18n-title="shortcutsTitle"></button>
+      <button id="lang" class="btn ghost" data-i18n-title="langTitle"></button>
     </div>
     <input id="file-input" type="file" accept="audio/*,video/*,.mp3,.wav,.flac,.m4a,.aac,.ogg,.opus,.mp4,.webm" hidden>
   </header>
 
   <section id="drop" class="drop">
     <div class="drop-inner">
-      <div class="drop-title">Audiodatei hierher ziehen</div>
-      <p>oder <button id="open-2" class="link">Datei auswählen</button> – MP3, WAV, FLAC, M4A, OGG, auch Videodateien.</p>
-      <p class="muted">Alles bleibt auf diesem Gerät. Es wird nichts hochgeladen.</p>
+      <div class="drop-title" data-i18n="dropTitle"></div>
+      <p><span data-i18n="dropOr"></span> <button id="open-2" class="link" data-i18n="dropChoose"></button> <span data-i18n="dropFormats"></span></p>
+      <p class="muted" data-i18n="dropPrivacy"></p>
     </div>
   </section>
 
@@ -37,107 +38,107 @@
     </div>
 
     <section class="transport">
-      <button id="play" class="play" title="Wiedergabe / Pause (Leertaste)" aria-label="Wiedergabe"></button>
-      <button id="restart" class="btn icon" title="Zum Loop-Anfang (Enter)">⏮</button>
+      <button id="play" class="play" data-i18n-title="playTitle" data-i18n-aria="play"></button>
+      <button id="restart" class="btn icon" data-i18n-title="restartTitle">⏮</button>
       <div class="clock"><span id="time">0:00.00</span><span class="muted" id="total"> / 0:00.00</span></div>
 
       <div class="loop-box">
-        <button id="loop-toggle" class="btn toggle" title="Loop ein/aus (L)">Loop</button>
-        <button id="set-a" class="btn" title="Anfang an der Abspielposition setzen (A)">A</button>
-        <input id="loop-a" class="time-input" inputmode="decimal" aria-label="Loop-Anfang" placeholder="–:––.––">
-        <span class="muted">bis</span>
-        <input id="loop-b" class="time-input" inputmode="decimal" aria-label="Loop-Ende" placeholder="–:––.––">
-        <button id="set-b" class="btn" title="Ende an der Abspielposition setzen (B)">B</button>
+        <button id="loop-toggle" class="btn toggle" data-i18n-title="loopToggleTitle">Loop</button>
+        <button id="set-a" class="btn" data-i18n-title="setATitle">A</button>
+        <input id="loop-a" class="time-input" inputmode="decimal" data-i18n-aria="loopStart" placeholder="–:––.––">
+        <span class="muted" data-i18n="to"></span>
+        <input id="loop-b" class="time-input" inputmode="decimal" data-i18n-aria="loopEnd" placeholder="–:––.––">
+        <button id="set-b" class="btn" data-i18n-title="setBTitle">B</button>
         <span class="sep"></span>
-        <button id="loop-prev" class="btn icon" title="Loop um seine Länge zurück (,)">◀</button>
-        <button id="loop-next" class="btn icon" title="Loop um seine Länge weiter (.)">▶</button>
-        <button id="loop-half" class="btn" title="Loop halbieren (H)">½</button>
-        <button id="loop-double" class="btn" title="Loop verdoppeln (D)">×2</button>
-        <button id="loop-save" class="btn" title="Loop in die Liste speichern (S)">Speichern</button>
-        <button id="loop-clear" class="btn ghost" title="Loop entfernen">Entfernen</button>
+        <button id="loop-prev" class="btn icon" data-i18n-title="loopPrevTitle">◀</button>
+        <button id="loop-next" class="btn icon" data-i18n-title="loopNextTitle">▶</button>
+        <button id="loop-half" class="btn" data-i18n-title="loopHalfTitle">½</button>
+        <button id="loop-double" class="btn" data-i18n-title="loopDoubleTitle">×2</button>
+        <button id="loop-save" class="btn" data-i18n="save" data-i18n-title="loopSaveTitle"></button>
+        <button id="loop-clear" class="btn ghost" data-i18n="remove" data-i18n-title="loopClearTitle"></button>
       </div>
 
       <div class="zoom-box">
-        <button id="zoom-out" class="btn icon" title="Herauszoomen">−</button>
-        <button id="zoom-in" class="btn icon" title="Hineinzoomen">+</button>
-        <button id="zoom-loop" class="btn" title="Auf den Loop zoomen (Z)">Loop</button>
-        <button id="zoom-fit" class="btn" title="Ganze Datei zeigen (F)">Alles</button>
+        <button id="zoom-out" class="btn icon" data-i18n-title="zoomOut">−</button>
+        <button id="zoom-in" class="btn icon" data-i18n-title="zoomIn">+</button>
+        <button id="zoom-loop" class="btn" data-i18n-title="zoomLoopTitle">Loop</button>
+        <button id="zoom-fit" class="btn" data-i18n="all" data-i18n-title="zoomFitFile"></button>
       </div>
     </section>
 
     <section class="panels">
       <div class="panel">
-        <div class="panel-head"><h2>Tempo</h2><output id="speed-out">100 %</output></div>
-        <input id="speed" type="range" min="10" max="200" step="1" value="100" aria-label="Tempo in Prozent">
+        <div class="panel-head"><h2 data-i18n="tempo"></h2><output id="speed-out">100 %</output></div>
+        <input id="speed" type="range" min="10" max="200" step="1" value="100" data-i18n-aria="tempoAria">
         <div class="chips" id="speed-chips">
           <button data-v="25">25</button><button data-v="35">35</button><button data-v="50">50</button><button data-v="60">60</button>
           <button data-v="70">70</button><button data-v="80">80</button><button data-v="90">90</button><button data-v="100">100</button>
         </div>
-        <label class="row">Pause zwischen Durchläufen <output id="gap-out">0 s</output></label>
-        <input id="gap" type="range" min="0" max="5" step="0.25" value="0" aria-label="Pause zwischen Loop-Durchläufen">
+        <label class="row"><span data-i18n="gapLabel"></span> <output id="gap-out">0 s</output></label>
+        <input id="gap" type="range" min="0" max="5" step="0.25" value="0" data-i18n-aria="gapAria">
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h2>Tonhöhe</h2><output id="pitch-out">±0</output></div>
+        <div class="panel-head"><h2 data-i18n="pitch"></h2><output id="pitch-out">±0</output></div>
         <div class="stepper">
-          <button id="pitch-oct-down" class="btn" title="Oktave tiefer">−12</button>
-          <button id="pitch-down" class="btn" title="Halbton tiefer">−1</button>
-          <button id="pitch-reset" class="btn ghost">Original</button>
-          <button id="pitch-up" class="btn" title="Halbton höher">+1</button>
-          <button id="pitch-oct-up" class="btn" title="Oktave höher">+12</button>
+          <button id="pitch-oct-down" class="btn" data-i18n-title="octDown">−12</button>
+          <button id="pitch-down" class="btn" data-i18n-title="semiDown">−1</button>
+          <button id="pitch-reset" class="btn ghost" data-i18n="original"></button>
+          <button id="pitch-up" class="btn" data-i18n-title="semiUp">+1</button>
+          <button id="pitch-oct-up" class="btn" data-i18n-title="octUp">+12</button>
         </div>
-        <label class="row">Feinstimmung <output id="cents-out">0 Cent</output></label>
-        <input id="cents" type="range" min="-50" max="50" step="1" value="0" aria-label="Feinstimmung in Cent">
+        <label class="row"><span data-i18n="fineLabel"></span> <output id="cents-out">0</output></label>
+        <input id="cents" type="range" min="-50" max="50" step="1" value="0" data-i18n-aria="fineAria">
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h2>Klang</h2>
-          <select id="channel" aria-label="Kanal">
-            <option value="0">Stereo</option><option value="1">Nur links</option><option value="2">Nur rechts</option>
-            <option value="3">Mono</option><option value="4">Mitte entfernt</option>
+        <div class="panel-head"><h2 data-i18n="sound"></h2>
+          <select id="channel" data-i18n-aria="channel">
+            <option value="0" data-i18n="stereo"></option><option value="1" data-i18n="leftOnly"></option><option value="2" data-i18n="rightOnly"></option>
+            <option value="3" data-i18n="mono"></option><option value="4" data-i18n="centerRemoved"></option>
           </select>
         </div>
         <div class="chips" id="focus-chips">
-          <button data-low="20" data-high="20000">Alles</button><button data-low="20" data-high="260">Bass</button>
-          <button data-low="200" data-high="2500">Mitten</button><button data-low="1800" data-high="20000">Höhen</button>
+          <button data-low="20" data-high="20000" data-i18n="all"></button><button data-low="20" data-high="260" data-i18n="bass"></button>
+          <button data-low="200" data-high="2500" data-i18n="mids"></button><button data-low="1800" data-high="20000" data-i18n="highs"></button>
         </div>
-        <label class="row">Frequenzbereich <output id="band-out">alles</output></label>
+        <label class="row"><span data-i18n="rangeLabel"></span> <output id="band-out"></output></label>
         <div class="dual">
-          <input id="band-low" type="range" min="0" max="1000" step="1" value="0" aria-label="Untere Grenzfrequenz">
-          <input id="band-high" type="range" min="0" max="1000" step="1" value="1000" aria-label="Obere Grenzfrequenz">
+          <input id="band-low" type="range" min="0" max="1000" step="1" value="0" data-i18n-aria="lowCut">
+          <input id="band-high" type="range" min="0" max="1000" step="1" value="1000" data-i18n-aria="highCut">
         </div>
-        <label class="row">Lautstärke <output id="vol-out">100 %</output></label>
-        <input id="volume" type="range" min="0" max="150" step="1" value="100" aria-label="Lautstärke">
+        <label class="row"><span data-i18n="volume"></span> <output id="vol-out">100 %</output></label>
+        <input id="volume" type="range" min="0" max="150" step="1" value="100" data-i18n-aria="volume">
       </div>
     </section>
 
     <section class="bottom">
       <div class="panel notes-panel">
         <div class="panel-head">
-          <h2>Töne an der Abspielposition</h2>
-          <div class="head-right"><span id="chord" class="chord" title="Geschätzter Akkord – nur ein Hinweis"></span>
-            <button id="names" class="btn ghost small" title="Notennamen umschalten">H / B</button></div>
+          <h2 data-i18n="notesAt"></h2>
+          <div class="head-right"><span id="chord" class="chord" data-i18n-title="chordTitle"></span>
+            <button id="names" class="btn ghost small" data-i18n-title="namesTitle"></button></div>
         </div>
         <canvas id="spectrum"></canvas>
-        <p class="muted small">Die Balken zeigen, welche Töne gerade klingen (inklusive Obertöne). Taste anklicken, um den Ton zum Vergleich zu hören.</p>
+        <p class="muted small" data-i18n="specHint"></p>
       </div>
 
       <div class="panel side-panel">
         <div class="tabs">
-          <button id="tab-items" class="tab active">Stellen</button>
-          <button id="tab-notes" class="tab">Notizen</button>
+          <button id="tab-items" class="tab active" data-i18n="places"></button>
+          <button id="tab-notes" class="tab" data-i18n="notes"></button>
           <span class="tab-actions">
-            <button id="add-marker" class="btn small" title="Marker an der Abspielposition (M)">+ Marker</button>
-            <button id="export-loop" class="btn small" title="Aktuellen Loop als WAV speichern">Loop als WAV</button>
+            <button id="add-marker" class="btn small" data-i18n="addMarker" data-i18n-title="markerTitle"></button>
+            <button id="export-loop" class="btn small" data-i18n="exportLoop" data-i18n-title="exportLoopTitle"></button>
           </span>
         </div>
-        <div id="items-view"><ol id="items" class="items"></ol><p id="items-empty" class="muted small">Noch keine Marker oder gespeicherten Loops. <kbd>M</kbd> setzt einen Marker, <kbd>S</kbd> speichert den aktuellen Loop.</p></div>
+        <div id="items-view"><ol id="items" class="items"></ol><p id="items-empty" class="muted small" data-i18n-html="itemsEmptyApp"></p></div>
         <div id="notes-view" hidden>
-          <textarea id="notes" spellcheck="false" placeholder="Notizen, Text, Akkorde …"></textarea>
+          <textarea id="notes" spellcheck="false" data-i18n-placeholder="notesPlaceholder"></textarea>
           <div class="notes-actions">
-            <button id="stamp" class="btn small" title="Zeitmarke einfügen (Alt+T)">Zeit einfügen</button>
-            <button id="export-notes" class="btn small">Als Textdatei speichern</button>
-            <span class="muted small">Beim Tippen: <kbd>Shift</kbd>+<kbd>Leertaste</kbd> Start/Pause · <kbd>Shift</kbd>+<kbd>Enter</kbd> zum Loop-Anfang</span>
+            <button id="stamp" class="btn small" data-i18n="stamp" data-i18n-title="stampTitle"></button>
+            <button id="export-notes" class="btn small" data-i18n="exportNotes"></button>
+            <span class="muted small" data-i18n-html="notesKeys"></span>
           </div>
         </div>
       </div>
@@ -145,30 +146,31 @@
   </main>
 
   <dialog id="help">
-    <h2>Tastenkürzel</h2>
+    <h2 data-i18n="shortcutsHeading"></h2>
     <div class="keys">
-      <div><kbd>Leertaste</kbd><span>Wiedergabe / Pause</span></div>
-      <div><kbd>Enter</kbd><span>Zum Loop-Anfang springen</span></div>
-      <div><kbd>←</kbd> <kbd>→</kbd><span>1 s zurück / vor (Shift: 5 s, Alt: 0,1 s)</span></div>
-      <div><kbd>A</kbd> <kbd>B</kbd><span>Loop-Anfang / -Ende an der Abspielposition</span></div>
-      <div><kbd>L</kbd><span>Loop ein / aus</span></div>
-      <div><kbd>,</kbd> <kbd>.</kbd><span>Loop um seine Länge zurück / weiter</span></div>
-      <div><kbd>H</kbd> <kbd>D</kbd><span>Loop halbieren / verdoppeln</span></div>
-      <div><kbd>Q</kbd> <kbd>W</kbd><span>Loop-Anfang früher / später (Shift: grob)</span></div>
-      <div><kbd>E</kbd> <kbd>R</kbd><span>Loop-Ende früher / später (Shift: grob)</span></div>
-      <div><kbd>↑</kbd> <kbd>↓</kbd><span>Tempo ±5 %</span></div>
-      <div><kbd>+</kbd> <kbd>−</kbd><span>Tonhöhe ±1 Halbton</span></div>
-      <div><kbd>M</kbd><span>Marker setzen</span></div>
-      <div><kbd>S</kbd><span>Loop speichern</span></div>
-      <div><kbd>1</kbd>–<kbd>9</kbd><span>Gespeicherte Stelle aufrufen</span></div>
-      <div><kbd>Z</kbd> <kbd>F</kbd><span>Auf Loop zoomen / alles zeigen</span></div>
+      <div><kbd data-i18n="kSpace"></kbd><span data-i18n="hPlay"></span></div>
+      <div><kbd>Enter</kbd><span data-i18n="hRestart"></span></div>
+      <div><kbd>←</kbd> <kbd>→</kbd><span data-i18n="hSeek"></span></div>
+      <div><kbd>A</kbd> <kbd>B</kbd><span data-i18n="hAB"></span></div>
+      <div><kbd>L</kbd><span data-i18n="hLoop"></span></div>
+      <div><kbd>,</kbd> <kbd>.</kbd><span data-i18n="hMove"></span></div>
+      <div><kbd>H</kbd> <kbd>D</kbd><span data-i18n="hScale"></span></div>
+      <div><kbd>Q</kbd> <kbd>W</kbd><span data-i18n="hNudgeA"></span></div>
+      <div><kbd>E</kbd> <kbd>R</kbd><span data-i18n="hNudgeB"></span></div>
+      <div><kbd>↑</kbd> <kbd>↓</kbd><span data-i18n="hTempo"></span></div>
+      <div><kbd>+</kbd> <kbd>−</kbd><span data-i18n="hPitch"></span></div>
+      <div><kbd>M</kbd><span data-i18n="hMarker"></span></div>
+      <div><kbd>S</kbd><span data-i18n="hSaveLoop"></span></div>
+      <div><kbd>1</kbd>–<kbd>9</kbd><span data-i18n="hRecall"></span></div>
+      <div><kbd>Z</kbd> <kbd>F</kbd><span data-i18n="hZoom"></span></div>
     </div>
-    <p class="muted small">Wellenform: Klick = springen · Ziehen = Loop aufziehen · Shift+Klick = nächste Loop-Grenze versetzen · Mausrad = zoomen · seitlich wischen = verschieben.</p>
-    <form method="dialog"><button class="btn">Schließen</button></form>
+    <p class="muted small" data-i18n="helpWave"></p>
+    <form method="dialog"><button class="btn" data-i18n="close"></button></form>
   </dialog>
 
   <div id="toast" class="toast" hidden></div>
   <script src="../shared/common.js"></script>
+  <script src="../shared/i18n.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Toolbar button: on a YouTube tab it toggles the looper panel under the
 // player, anywhere else it opens the workstation for audio files.
 const APP_URL = chrome.runtime.getURL("app/index.html");
-const CONTENT_FILES = ["shared/common.js", "youtube/panel-css.js", "youtube/content.js"];
+const CONTENT_FILES = ["shared/common.js", "shared/i18n.js", "youtube/panel-css.js", "youtube/content.js"];
 const isYouTube = (url) => /^https:\/\/www\.youtube\.com\//.test(url || "");
 
 chrome.action.onClicked.addListener(async (tab) => {

@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Transcription Looper",
+    "description": "Name of the extension."
+  },
+  "extDescription": {
+    "message": "Learn music by ear: precise A/B loops, slow-down, pitch shift, tone filters and a live note display for YouTube videos and audio files.",
+    "description": "Description shown in the extensions page and the store."
+  }
+}

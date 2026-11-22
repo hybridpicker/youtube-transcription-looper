@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Transkriptions-Looper",
+    "description": "Name of the extension."
+  },
+  "extDescription": {
+    "message": "Heraushören und Transkribieren: präziser A/B-Loop, Zeitlupe, Tonhöhe, Klangfilter und Tonanzeige für YouTube-Videos und Audiodateien.",
+    "description": "Description shown in the extensions page and the store."
+  }
+}

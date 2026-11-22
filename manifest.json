@@ -1,11 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Transkriptions-Looper",
-  "version": "2.1.1",
-  "description": "Heraushören und Transkribieren: präziser A/B-Loop, Zeitlupe, Tonhöhe, Klangfilter und Tonanzeige für YouTube-Videos und Audiodateien.",
-  "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": ["https://www.youtube.com/*"],
-  "background": { "service_worker": "background.js" },
+  "name": "__MSG_extName__",
+  "version": "2.2.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -13,7 +22,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Transkriptions-Looper",
+    "default_title": "__MSG_extName__",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png"
@@ -21,15 +30,29 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["shared/common.js", "youtube/panel-css.js", "youtube/content.js"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "shared/common.js",
+        "shared/i18n.js",
+        "youtube/panel-css.js",
+        "youtube/content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["app/live-worklet.js", "app/live-core.js", "app/vocoder.js", "app/fft.js"],
-      "matches": ["https://www.youtube.com/*"]
+      "resources": [
+        "app/live-worklet.js",
+        "app/live-core.js",
+        "app/vocoder.js",
+        "app/fft.js"
+      ],
+      "matches": [
+        "https://www.youtube.com/*"
+      ]
     }
   ]
 }

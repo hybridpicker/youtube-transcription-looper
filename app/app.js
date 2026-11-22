@@ -3,6 +3,8 @@ import { buildPeaks, noteSpectrum, strongestNotes, guessChord, encodeWav, NOTE_L
 
 const $ = (id) => document.getElementById(id);
 const { clamp, fmt, parseTime, tickStep, NAMES } = globalThis.TL;
+const I18N = globalThis.TL_I18N;
+const { t, num } = I18N;
 
 const RULER = 22; // px, time ruler at the top of the waveform
 const MIN_LOOP = 0.03; // seconds
@@ -29,7 +31,9 @@ const S = {
   notes: "",
   view: { start: 0, end: 1 }
 };
-const G = { volume: 100, names: "de" };
+const G = { volume: 100, names: null, lang: null };
+// Note naming follows the language unless the user picked one (B or H).
+const nameSet = () => G.names || (I18N.lang === "de" ? "de" : "intl");
 let drag = null;
 let specDirty = true;
 const levels = new Float32Array(NOTE_COUNT);
@@ -110,13 +114,13 @@ function restore(key) {
 // ---- loading ---------------------------------------------------------------
 
 async function loadFile(file, remember = true) {
-  toast(`Lade „${file.name}“ …`, 0);
+  toast(t("loading", { name: file.name }), 0);
   let buffer;
   try {
     buffer = await engine.load(await file.arrayBuffer());
   } catch (error) {
     console.error(error);
-    toast("Diese Datei konnte nicht als Audio gelesen werden.", 5000);
+    toast(t("badFile"), 5000);
     return;
   }
   save();
@@ -137,8 +141,9 @@ async function loadFile(file, remember = true) {
 
   $("drop").hidden = true;
   $("work").hidden = false;
-  $("file-name").textContent = `${file.name} · ${fmt(S.duration, false)} min · ${(buffer.sampleRate / 1000).toFixed(1)} kHz`;
-  document.title = `${file.name} – Transkriptions-Werkstatt`;
+  S.sampleRate = buffer.sampleRate;
+  delete $("file-name").dataset.i18n;
+  showFileInfo();
   $("total").textContent = ` / ${fmt(S.duration)}`;
   $("notes").value = S.notes;
   resizeCanvases();
@@ -157,7 +162,26 @@ function applyAll() {
   setBand(S.low, S.high);
   setVolume(G.volume);
   syncLoop();
-  $("names").textContent = G.names === "de" ? "Notennamen: H" : "Notennamen: B";
+  $("names").textContent = nameSet() === "de" ? t("namesH") : t("namesB");
+}
+
+function showFileInfo() {
+  document.title = S.name ? `${S.name} – ${t("workstation")}` : t("workstation");
+  if (!S.name) return;
+  $("file-name").textContent = `${S.name} · ${fmt(S.duration, false)} ${t("minutes")} · ${num((S.sampleRate / 1000).toFixed(1))} kHz`;
+}
+
+// Fills all static texts in the current language and refreshes the dynamic ones.
+function applyLanguage() {
+  I18N.setLang(G.lang);
+  document.documentElement.lang = I18N.lang;
+  I18N.apply(document);
+  $("lang").textContent = I18N.lang === "de" ? "EN" : "DE";
+  $("play").setAttribute("aria-label", engine.playing ? t("pause") : t("play"));
+  showFileInfo();
+  if (!S.peaks) return;
+  applyAll();
+  renderItems();
 }
 
 // ---- settings --------------------------------------------------------------
@@ -175,8 +199,8 @@ function setPitch(semis, cents) {
   S.semis = clamp(semis, -12, 12);
   S.cents = clamp(cents, -50, 50);
   $("cents").value = S.cents;
-  $("pitch-out").textContent = S.semis === 0 ? "±0" : `${S.semis > 0 ? "+" : "−"}${Math.abs(S.semis)} HT`;
-  $("cents-out").textContent = `${S.cents > 0 ? "+" : ""}${S.cents} Cent`;
+  $("pitch-out").textContent = S.semis === 0 ? "±0" : `${S.semis > 0 ? "+" : "−"}${Math.abs(S.semis)} ${t("semitoneUnit")}`;
+  $("cents-out").textContent = `${S.cents > 0 ? "+" : ""}${S.cents} ${t("centUnit")}`;
   engine.setParams(S.speed / 100, shift());
   specDirty = true;
   saveSoon();
@@ -185,7 +209,7 @@ function setPitch(semis, cents) {
 function setGap(v) {
   S.gap = v;
   $("gap").value = v;
-  $("gap-out").textContent = `${String(v).replace(".", ",")} s`;
+  $("gap-out").textContent = `${num(v)} s`;
   engine.setGap(v);
   saveSoon();
 }
@@ -208,8 +232,8 @@ function setBand(low, high) {
   $("band-low").value = low;
   $("band-high").value = high;
   const full = low <= 0 && high >= 1000;
-  const hz = (v) => { const f = bandHz(v); return f >= 1000 ? `${(f / 1000).toFixed(1).replace(".", ",")} kHz` : `${Math.round(f)} Hz`; };
-  $("band-out").textContent = full ? "alles" : `${hz(low)} – ${hz(high)}`;
+  const hz = (v) => { const f = bandHz(v); return f >= 1000 ? `${num((f / 1000).toFixed(1))} kHz` : `${Math.round(f)} Hz`; };
+  $("band-out").textContent = full ? t("bandFull") : `${hz(low)} – ${hz(high)}`;
   for (const b of $("focus-chips").children) {
     const near = (v, target) => Math.abs(bandHz(v) / target - 1) < 0.01;
     b.classList.toggle("on", near(low, b.dataset.low) && near(high, b.dataset.high));
@@ -251,7 +275,7 @@ function setA(t) {
 function setB(t) {
   if (S.loop.a == null) S.loop.a = 0;
   if (t - S.loop.a < MIN_LOOP) {
-    toast("Das Ende muss hinter dem Anfang liegen.");
+    toast(t("endAfterStart"));
     return;
   }
   S.loop.b = clamp(t, 0, S.duration);
@@ -261,7 +285,7 @@ function setB(t) {
 
 function toggleLoop() {
   if (!hasLoop()) {
-    toast("Erst einen Bereich in der Wellenform aufziehen oder A und B setzen.");
+    toast(t("noLoopWave"));
     return;
   }
   S.loop.on = !S.loop.on;
@@ -603,7 +627,7 @@ overview.addEventListener("pointermove", (event) => { if (event.buttons & 1) ove
 // ---- note spectrum -----------------------------------------------------------
 
 const isBlack = (note) => [1, 3, 6, 8, 10].includes(note % 12);
-const noteName = (note, octave = true) => NAMES[G.names][note % 12] + (octave ? Math.floor(note / 12) - 1 : "");
+const noteName = (note, octave = true) => NAMES[nameSet()][note % 12] + (octave ? Math.floor(note / 12) - 1 : "");
 const KEYS_H = 40;
 
 function drawSpectrum() {
@@ -616,7 +640,7 @@ function drawSpectrum() {
   const strong = strongestNotes(levels);
   const strongSet = new Set(strong.map((s) => s.note));
   const chord = guessChord(levels);
-  $("chord").textContent = chord ? `≈ ${NAMES[G.names][chord.root]}${chord.suffix}` : "";
+  $("chord").textContent = chord ? `≈ ${NAMES[nameSet()][chord.root]}${chord.suffix}` : "";
 
   ctx.clearRect(0, 0, W, H);
   const keysH = KEYS_H * dpr, barsH = H - keysH - 16 * dpr, col = W / NOTE_COUNT;
@@ -703,13 +727,13 @@ function renderItems() {
     when.textContent = item.type === "loop" ? `${fmt(item.a)} – ${fmt(item.b)}` : fmt(item.t);
     const label = document.createElement("input");
     label.value = item.label;
-    label.placeholder = item.type === "loop" ? "Loop benennen …" : "Marker benennen …";
+    label.placeholder = item.type === "loop" ? t("nameLoop") : t("nameMarker");
     label.addEventListener("input", () => { item.label = label.value; saveSoon(); });
     label.addEventListener("click", (event) => event.stopPropagation());
     const del = document.createElement("button");
     del.className = "del";
     del.textContent = "×";
-    del.title = "Löschen";
+    del.title = t("delete");
     del.addEventListener("click", (event) => {
       event.stopPropagation();
       S.items = S.items.filter((other) => other !== item);
@@ -758,7 +782,7 @@ function frame(now) {
 
 engine.addEventListener("state", () => {
   $("play").classList.toggle("on", engine.playing);
-  $("play").setAttribute("aria-label", engine.playing ? "Pause" : "Wiedergabe");
+  $("play").setAttribute("aria-label", engine.playing ? t("pause") : t("play"));
 });
 
 const pickFile = () => $("file-input").click();
@@ -792,7 +816,7 @@ $("loop-save").onclick = saveLoop;
 function saveLoop() {
   if (!hasLoop()) return;
   addItem({ type: "loop", a: S.loop.a, b: S.loop.b });
-  toast("Loop gespeichert.");
+  toast(t("loopSaved"));
 }
 for (const [id, edge] of [["loop-a", "a"], ["loop-b", "b"]]) {
   $(id).addEventListener("change", (event) => {
@@ -835,8 +859,8 @@ $("band-low").addEventListener("input", (event) => setBand(Number(event.target.v
 $("band-high").addEventListener("input", (event) => setBand(S.low, Number(event.target.value)));
 $("volume").addEventListener("input", (event) => setVolume(Number(event.target.value)));
 $("names").onclick = () => {
-  G.names = G.names === "de" ? "intl" : "de";
-  $("names").textContent = G.names === "de" ? "Notennamen: H" : "Notennamen: B";
+  G.names = nameSet() === "de" ? "intl" : "de";
+  $("names").textContent = G.names === "de" ? t("namesH") : t("namesB");
   specDirty = true;
   saveSoon();
 };
@@ -864,8 +888,13 @@ function insertStamp() {
   saveSoon();
 }
 $("stamp").onclick = insertStamp;
-$("export-notes").onclick = () => download(new Blob([S.notes], { type: "text/plain;charset=utf-8" }), `${S.name.replace(/\.[^.]+$/, "")}_Notizen.txt`);
+$("export-notes").onclick = () => download(new Blob([S.notes], { type: "text/plain;charset=utf-8" }), `${S.name.replace(/\.[^.]+$/, "")}_${t("notesFile")}.txt`);
 $("help-btn").onclick = () => $("help").showModal();
+$("lang").onclick = () => {
+  G.lang = I18N.lang === "de" ? "en" : "de";
+  applyLanguage();
+  saveSoon();
+};
 
 window.addEventListener("keydown", (event) => {
   if (!S.peaks || event.metaKey || event.ctrlKey || $("help").open) return;
@@ -921,4 +950,5 @@ window.addEventListener("beforeunload", save);
 requestAnimationFrame(frame);
 
 restore("tl:global");
+applyLanguage();
 idbGet("last-file").then((file) => { if (file && !S.peaks) loadFile(file, false); }).catch(() => {});
