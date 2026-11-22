@@ -1,120 +1,169 @@
-# Transkriptions-Looper
+# Transcription Looper
 
-Eine lokale Chrome-Erweiterung zum Heraushören und Transkribieren. Sie besteht aus zwei Teilen:
+**A Chrome extension for learning music by ear.** Loop a passage of a YouTube video or an audio file precisely, slow it down without changing the pitch, transpose it, filter out the bass and see which notes are sounding – all in your browser, nothing is uploaded.
 
-- **YouTube-Looper**: ein Bedienfeld direkt neben dem YouTube-Video mit präzisem A/B-Loop, Zeitlupe, Transposition, Klangfilter, Live-Tonanzeige und gespeicherten Stellen.
-- **Transkriptions-Werkstatt** für Audiodateien: dieselben Werkzeuge mit echter Wellenform und samplegenauen Loops.
+[Deutsche Version](README.de.md) · [Download the latest release](https://github.com/hybridpicker/youtube-transcription-looper/releases/latest) · [Changelog](CHANGELOG.md)
 
-Alles läuft im Browser auf diesem Gerät. Es wird nichts hochgeladen oder aufgezeichnet.
+![The looper panel next to a YouTube video](docs/screenshots/youtube-panel.png)
+
+It has two parts:
+
+- **YouTube looper** – a panel right next to the video with a precise A/B loop, slow-down, transposition, tone filters, a bar grid, a live note display and saved places.
+- **Transcription workstation** for audio files – the same tools with a real waveform and sample-accurate loops.
+
+The interface is available in **English** and **German**. It follows your browser language; the `DE` / `EN` button switches it.
+
+## Features
+
+- **A/B loop** – drag a range in the timeline, fine-tune the edges, move the loop by its own length, halve or double it, add a pause between repeats.
+- **Slow-down from 10 to 200 %** at the same pitch, also below YouTube's own 25 % limit, using a phase vocoder that sounds clean at slow tempos.
+- **Pitch** ±12 semitones plus fine tuning in cents, independent of the tempo.
+- **Sound** – left / right channel only, mono, center removed (often reduces the lead vocal or solo), and a frequency range filter, e.g. bass only.
+- **Bar grid** – tap the tempo, set the one, and loops snap to beats and bars; set a loop as "bars 5 to 8".
+- **Live notes** – a piano keyboard shows which notes are sounding and guesses the chord. Click a key to hear the note.
+- **Places** – named markers and saved loops, remembered per video or file.
+- **Workstation extras** – sample-accurate loops without clicks, notes with timestamps, export of the current loop as WAV.
+- **Private by design** – no account, no tracking, no network requests of its own. See [PRIVACY.md](PRIVACY.md).
 
 ## Installation
 
-1. Öffne `chrome://extensions` in Chrome.
-2. Aktiviere oben rechts den **Entwicklermodus**.
-3. Klicke auf **Entpackte Erweiterung laden** und wähle diesen Ordner aus.
-4. Hefte das Symbol der Erweiterung in der Symbolleiste an.
+The extension is not in the Chrome Web Store (yet). Installing it takes a minute:
 
-Nach einer Änderung an der Erweiterung genügt in `chrome://extensions` ein Klick auf das Aktualisieren-Symbol. Bereits geöffnete YouTube-Tabs danach am besten einmal neu laden.
+1. Download `transcription-looper-<version>.zip` from the [latest release](https://github.com/hybridpicker/youtube-transcription-looper/releases/latest) and unzip it.
+2. Open `chrome://extensions` in Chrome.
+3. Turn on **Developer mode** (top right).
+4. Click **Load unpacked** and choose the unzipped folder.
+5. Pin the extension icon in the toolbar.
 
-## YouTube-Looper
+It works in Chrome and other Chromium-based browsers (Edge, Brave, Vivaldi, Arc).
 
-Auf einer YouTube-Videoseite das Symbol der Erweiterung anklicken: Das Bedienfeld erscheint rechts neben dem Video, sodass Bild und Regler gleichzeitig sichtbar sind, und bleibt beim Scrollen stehen. Es bleibt für weitere Videos geöffnet, bis du es mit `×` schließt.
+**Update:** download the new release, replace the folder's contents and click the reload icon on the extension's card in `chrome://extensions`. Reload open YouTube tabs afterwards.
 
-Der Knopf `⬓` in der Kopfzeile setzt das Bedienfeld stattdessen breit unter das Video (und `◨` wieder zurück). Im Kinomodus und in schmalen Fenstern ohne Seitenleiste landet es automatisch unter dem Video. Jeder Abschnitt (Tempo, Tonhöhe, Klang, Töne, Stellen) lässt sich mit einem Klick auf seine Überschrift einklappen. Auf jeder anderen Seite öffnet das Symbol die Werkstatt für Audiodateien.
+**From source:** clone this repository and choose the repository folder in step 4.
 
-| Bereich | Was er kann |
+## YouTube looper
+
+![The looper panel](docs/screenshots/youtube-panel-close.png)
+
+On a YouTube video page, click the extension icon: the panel appears next to the video, so picture and controls are visible together, and it stays in place while you scroll. It stays open for further videos until you close it with `×`.
+
+The `⬓` button in the header moves the panel below the video instead (`◨` moves it back). In theater mode and in narrow windows without a sidebar it goes below the video automatically. Every section (Tempo, Pitch, Sound, Bars, Places, Notes) folds with a click on its heading. On any other page the icon opens the workstation for audio files.
+
+| Section | What it does |
 | --- | --- |
-| Zeitleiste | Klick springt, Ziehen zieht einen Loop auf, die Griffe A/B lassen sich verschieben. Ein neuer Loop wird automatisch herangezoomt; **Alles** zeigt wieder das ganze Video, `Strg`/`⌘` + Mausrad zoomt frei. Die Wellenform entsteht beim Abspielen und zeigt, was du schon gehört hast. |
-| Loop | Um die eigene Länge weiter/zurück springen, halbieren, verdoppeln, Grenzen fein verschieben, Pause zwischen den Durchläufen. `✕` entfernt den Loop. |
-| Tempo | 10–200 % bei gleicher Tonhöhe, auch unter YouTubes Grenze von 25 %. Ein Klick auf die Prozentzahl setzt auf 100 % zurück. |
-| Tonhöhe | ±12 Halbtöne und Feinstimmung in Cent, unabhängig vom Tempo. |
-| Klang | Kanalwahl (links, rechts, Mono, Mitte entfernt) und Frequenzbereich, z. B. nur Bass. |
-| Takte | Taktraster in der Zeitleiste mit Taktnummern; Loop-Grenzen rasten auf Schläge und Takte ein, und ein Loop lässt sich direkt als „Takt 5 bis 8“ setzen. |
-| Stellen | Marker (**+ Marker**) und gespeicherte Loops (**+ Loop**) mit Namen, pro Video gemerkt. |
-| Töne | Zeigt live über einer Klaviatur, welche Töne klingen, und schätzt den Akkord. Ein Klick auf eine Taste spielt den Ton zum Vergleich. |
+| Timeline | Click to jump, drag to draw a loop, drag the A/B handles to move its edges. A new loop is zoomed in automatically; **All** shows the whole video again, `Ctrl`/`⌘` + mouse wheel zooms freely. The waveform builds up while the video plays and shows what you have already heard. |
+| Loop | Move by its own length, halve, double, nudge the edges, pause between repeats. `✕` removes the loop. |
+| Tempo | 10–200 % at the same pitch. Click the percentage to reset to 100 %. |
+| Pitch | ±12 semitones and fine tuning in cents, independent of the tempo. |
+| Sound | Channel (left, right, mono, center removed) and frequency range, e.g. bass only. |
+| Bars | Bar grid with bar numbers in the timeline; loop edges snap to beats and bars, and a loop can be set as "bar 5 to 8". |
+| Places | Markers (**+ Marker**) and saved loops (**+ Loop**) with names, remembered per video. |
+| Notes | Shows live on a piano keyboard which notes are sounding and guesses the chord. Click a key to hear the note for comparison. |
 
-Loop, Tempo, Tonhöhe und Stellen werden pro Video gespeichert.
+Loop, tempo, pitch, grid and places are saved per video.
 
-Die Tastenkürzel sind dieselben wie in der Werkstatt (siehe unten, ohne die Notizfeld-Kürzel). Solange das Bedienfeld offen ist, haben sie Vorrang vor YouTubes eigenen Tasten; der Knopf **Tasten** schaltet das aus.
+The keyboard shortcuts are the same as in the workstation (see below), plus `T` (tap tempo), `X` (set the one) and `G` (grid on/off). While the panel is open they take precedence over YouTube's own keys; the **Keys** button turns that off.
 
-### Takte markieren
+### Marking bars
 
-Der Abschnitt **Takte** ist anfangs eingeklappt; ein Klick auf die Überschrift öffnet ihn.
+The **Bars** section starts folded; click its heading to open it.
 
-1. **Tempo festlegen:** Video laufen lassen und im Takt auf **Tippen** klicken (oder `T` drücken), mindestens zwei, besser acht Schläge. Alternativ das Tempo als BPM eintragen. Das funktioniert auch bei verlangsamter Wiedergabe; das Tempo bezieht sich immer auf das Original.
-2. **Eins setzen:** An der ersten Zählzeit von Takt 1 auf **1 hier** klicken (oder `X`). Mit `◂` `▸` lässt sich das Raster um 10 ms verschieben (`Shift`: 50 ms).
-3. **Taktart:** Schläge pro Takt wählen (Standard 4).
+1. **Set the tempo:** let the video play and click **Tap** along with the beat (or press `T`) – at least two, better eight beats. Or type the BPM. This also works at reduced speed; the tempo always refers to the original.
+2. **Set the one:** on the first beat of bar 1, click **1 here** (or press `X`). `◂` `▸` shift the grid by 10 ms (`Shift`: 50 ms).
+3. **Time signature:** choose the beats per bar (default 4).
 
-Danach zeigt die Zeitleiste Taktstriche mit Nummern statt Zeiten, beim Hineinzoomen auch die Schläge, und oben rechts im Abschnitt steht der aktuelle Takt und Schlag. Loop-Grenzen rasten beim Ziehen und bei `A`/`B` ein; `Alt` beim Ziehen schaltet das Einrasten aus, **Raster** (`G`) blendet alles aus. Ein Loop, der auf Taktgrenzen liegt, springt mit `,` und `.` taktweise weiter.
+The timeline then shows bar lines with numbers instead of times, beats when zoomed in, and the section header shows the current bar and beat. Loop edges snap while dragging and with `A`/`B`; hold `Alt` while dragging to switch snapping off, **Grid** (`G`) hides it all. A loop that lies on bar lines moves bar by bar with `,` and `.`.
 
-Das Raster ist gleichmäßig. Bei Aufnahmen mit schwankendem Tempo läuft es mit der Zeit auseinander; dann die Eins am jeweiligen Abschnitt neu setzen.
+The grid is even. On recordings with a drifting tempo it gets out of step over time; set the one again at the passage you are working on.
 
-### So funktioniert die Klangbearbeitung
+### How the sound processing works
 
-Für Zeitlupe und Transposition wird der Ton des Videos durch einen eigenen Phase-Vocoder geleitet statt durch Chromes eingebaute Tempokorrektur. Das klingt bei langsamen Tempi deutlich sauberer, bringt aber eine kleine Verzögerung des Tons gegenüber dem Bild mit (etwa 0,1 s, bei sehr langsamem Tempo bis 0,35 s). Bei 100 % und Originaltonhöhe läuft der Ton unverändert und ohne Verzögerung.
+For slow-down and transposition, the video's sound runs through the extension's own phase vocoder instead of Chrome's built-in tempo correction. That sounds much cleaner at slow tempos, but delays the sound slightly against the picture (about 0.1 s, up to 0.35 s at very slow tempos). At 100 % and original pitch the sound is passed through unchanged and without delay.
 
-### Hinweise
+### Good to know
 
-- Die Klangbearbeitung startet erst nach dem ersten Klick auf die Seite, weil Chrome Tonverarbeitung ohne Nutzeraktion nicht erlaubt. Bis dahin funktionieren Loop und Tempo bereits.
-- Beim Sprung zum Loop-Anfang macht der YouTube-Player eine winzige Pause. Für nahtlose, samplegenaue Loops ist die Werkstatt mit einer Audiodatei besser geeignet.
-- Während Werbung greift der Looper nicht ein.
-- Im Vollbildmodus ist das Bedienfeld nicht sichtbar; Loop und Tastenkürzel laufen weiter.
-- Wird die Erweiterung neu geladen, während ein YouTube-Tab offen ist, den Tab neu laden.
+- Sound processing starts after your first click on the page, because Chrome does not allow audio processing without a user action. Loop and tempo work before that.
+- When jumping back to the loop start, the YouTube player pauses for a tiny moment. For seamless, sample-accurate loops, use the workstation with an audio file.
+- The looper does not interfere during ads.
+- The panel is not visible in fullscreen; loop and shortcuts keep working.
+- If the extension is reloaded while a YouTube tab is open, reload the tab.
 
-## Transkriptions-Werkstatt (Audiodateien)
+## Transcription workstation (audio files)
 
-Öffnen: Erweiterungs-Symbol auf einer beliebigen Nicht-YouTube-Seite anklicken, oder im YouTube-Bedienfeld **Audiodatei …**. Danach eine Datei in das Fenster ziehen (MP3, WAV, FLAC, M4A, OGG; auch Videodateien mit Tonspur).
+![The workstation with a loop, slow-down and the note display](docs/screenshots/workstation-en.png)
 
-| Bereich | Was er kann |
+Open it by clicking the extension icon on any non-YouTube page, or with **File** in the YouTube panel. Then drop a file into the window (MP3, WAV, FLAC, M4A, OGG; also video files with a sound track).
+
+| Section | What it does |
 | --- | --- |
-| Wellenform | Klick springt, Ziehen zieht einen Loop auf, die Griffe A/B lassen sich verschieben. Mausrad zoomt, seitliches Wischen verschiebt. Die Leiste darüber zeigt die ganze Datei. |
-| Loop | Samplegenaue Grenzen ohne Knackser. Um die eigene Länge weiter/zurück springen, halbieren, verdoppeln, Pause zwischen den Durchläufen. |
-| Tempo | 10–200 % bei gleicher Tonhöhe. Bei 100 % und Originaltonhöhe wird die Datei unverändert abgespielt. |
-| Tonhöhe | ±12 Halbtöne und Feinstimmung in Cent, unabhängig vom Tempo. |
-| Klang | Kanalwahl (links, rechts, Mono, Mitte entfernt) und Frequenzbereich, z. B. nur Bass. |
-| Töne | Zeigt über einer Klaviatur, welche Töne an der Abspielposition klingen, und schätzt den Akkord. Ein Klick auf eine Taste spielt den Ton zum Vergleich. |
-| Stellen | Marker und gespeicherte Loops mit Namen; Aufruf per Klick oder Zifferntaste. |
-| Notizen | Textfeld pro Datei mit Zeitmarken, Export als Textdatei. Der aktuelle Loop lässt sich als WAV speichern. |
+| Waveform | Click to jump, drag to draw a loop, drag the A/B handles. Mouse wheel zooms, swiping sideways scrolls. The strip above shows the whole file. |
+| Loop | Sample-accurate edges without clicks. Move by its own length, halve, double, pause between repeats. |
+| Tempo | 10–200 % at the same pitch. At 100 % and original pitch the file plays unchanged. |
+| Pitch | ±12 semitones and fine tuning in cents, independent of the tempo. |
+| Sound | Channel (left, right, mono, center removed), frequency range and volume. |
+| Notes | Shows on a piano keyboard which notes are sounding at the playback position and guesses the chord. Click a key to hear the note. |
+| Places | Markers and saved loops with names; recall with a click or a number key. |
+| Notes tab | A text field per file with timestamps, export as a text file. The current loop can be saved as WAV. |
 
-Loop, Tempo, Marker und Notizen werden pro Datei gemerkt. Die zuletzt geöffnete Datei wird beim nächsten Start wieder geladen (lokal im Browserspeicher der Erweiterung).
+Loop, tempo, markers and notes are remembered per file. The last opened file is loaded again on the next start (stored locally in the extension's browser storage).
 
-### Tastenkürzel
+### Keyboard shortcuts
 
-| Taste | Funktion |
+| Key | Action |
 | --- | --- |
-| `Leertaste` | Wiedergabe / Pause |
-| `Enter` | Zum Loop-Anfang springen und abspielen |
-| `←` `→` | 1 s zurück / vor (`Shift`: 5 s, `Alt`: 0,1 s) |
-| `A` `B` | Loop-Anfang / -Ende an der Abspielposition |
-| `L` | Loop ein / aus |
-| `,` `.` | Loop um seine Länge zurück / weiter |
-| `H` `D` | Loop halbieren / verdoppeln |
-| `Q` `W` / `E` `R` | Loop-Anfang / Loop-Ende früher / später (`Shift`: grob) |
+| `Space` | Play / pause |
+| `Enter` | Jump to loop start and play |
+| `←` `→` | 1 s back / forward (`Shift`: 5 s, `Alt`: 0.1 s) |
+| `A` `B` | Loop start / end at the playback position |
+| `L` | Loop on / off |
+| `,` `.` | Move loop back / forward by its length |
+| `H` `D` | Halve / double loop |
+| `Q` `W` / `E` `R` | Loop start / loop end earlier / later (`Shift`: coarse) |
 | `↑` `↓` | Tempo ±5 % |
-| `+` `−` | Tonhöhe ±1 Halbton |
-| `M` / `S` | Marker setzen / Loop speichern |
-| `1`–`9` | Gespeicherte Stelle aufrufen |
-| `Z` / `F` | Auf den Loop zoomen / ganze Datei zeigen |
+| `+` `−` | Pitch ±1 semitone |
+| `M` / `S` | Set marker / save loop |
+| `1`–`9` | Recall saved place |
+| `Z` / `F` | Zoom to loop / show the whole file |
+| `?` | Show shortcuts |
 
-Im Notizfeld: `Shift`+`Leertaste` Start/Pause, `Shift`+`Enter` zum Loop-Anfang, `Alt`+`T` Zeitmarke.
+In the notes field: `Shift`+`Space` play/pause, `Shift`+`Enter` to loop start, `Alt`+`T` insert timestamp.
 
-### Hinweise
+### Good to know
 
-- Die Akkordanzeige ist eine Schätzung aus dem Spektrum und kann durch Obertöne danebenliegen. Unter etwa A1 ist die Tonauflösung grob.
-- Sehr lange Dateien brauchen viel Arbeitsspeicher, weil sie vollständig dekodiert werden (etwa 25 MB pro Stereo-Minute).
-- Ohne Erweiterung lässt sich die Werkstatt auch über einen lokalen Webserver öffnen: im Projektordner `python3 -m http.server 8791` starten und `http://localhost:8791/app/` aufrufen. Ein Doppelklick auf `index.html` genügt nicht.
+- The chord display is an estimate from the spectrum and can be off because of overtones. Below about A1 the note resolution is coarse.
+- Very long files need a lot of memory because they are decoded completely (about 25 MB per stereo minute).
+- Without the extension, the workstation also runs from a local web server: run `python3 -m http.server 8791` in the repository folder and open `http://localhost:8791/app/`. Double-clicking `index.html` does not work.
 
-### Aufbau
+## Note names
 
-| Datei | Inhalt |
+The note display uses international names (`B`) in English and German names (`H`) in German. The `B` / `H` button in the note section switches between them independently of the language.
+
+## Development
+
+There is no build step: the extension is plain JavaScript, HTML and CSS.
+
+| File | Content |
 | --- | --- |
-| `youtube/content.js`, `youtube/panel-css.js` | YouTube-Bedienfeld (Content-Script, Shadow DOM) |
-| `background.js` | Symbol-Klick: Bedienfeld umschalten oder Werkstatt öffnen |
-| `app/vocoder.js` | Phase-Vocoder mit Phase-Locking, gemeinsam für beide Teile |
-| `app/live-core.js`, `app/live-worklet.js` | Live-Tonhöhenwandler für den YouTube-Ton |
-| `app/stretch-core.js` | Datei-Wiedergabe: Zeitdehnung, Resampler, samplegenaue Loop-Logik |
-| `shared/common.js` | Gemeinsame Helfer (Zeitformat, Notennamen, Akkordschätzung) |
-| `legacy-v1/` | Die ursprüngliche Version der Erweiterung als Sicherung |
-| `app/stretch-worklet.js`, `app/engine.js` | AudioWorklet und Anbindung an Web Audio |
-| `app/analysis.js`, `app/fft.js` | Wellenform-Daten, Notenspektrum, Akkordschätzung, WAV-Export |
-| `app/app.js`, `app/index.html`, `app/app.css` | Oberfläche |
+| `manifest.json`, `_locales/` | Extension manifest; name and description in English and German |
+| `background.js` | Toolbar icon: toggle the panel or open the workstation |
+| `youtube/content.js`, `youtube/panel-css.js` | YouTube panel (content script, Shadow DOM) |
+| `shared/common.js` | Shared helpers (time format, note names, chord estimate) |
+| `shared/i18n.js` | All UI texts in English and German |
+| `app/vocoder.js` | Phase vocoder with phase locking, shared by both parts |
+| `app/live-core.js`, `app/live-worklet.js` | Live pitch shifter for the YouTube sound |
+| `app/stretch-core.js`, `app/stretch-worklet.js` | File playback: time stretching, resampler, sample-accurate loops |
+| `app/engine.js` | AudioWorklet and Web Audio wiring for the workstation |
+| `app/analysis.js`, `app/fft.js` | Waveform data, note spectrum, WAV export |
+| `app/app.js`, `app/index.html`, `app/app.css` | Workstation interface |
+| `scripts/package.sh` | Builds the release ZIP in `dist/` |
+| `scripts/demo-audio.py` | Writes a synthetic demo track for testing and screenshots |
+
+Contributions are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). The original first version of the extension is kept in the Git history (last present in commit `6554d9e`, folder `legacy-v1/`).
+
+## License
+
+[MIT](LICENSE) © 2026 Lukas Schönsgibl
+
+Screenshots of the YouTube panel show ["Nardis" – A Bill Evans Jazz Tribute](https://www.youtube.com/watch?v=3jdUUfYXp3g) by the author, used with permission. The workstation screenshots use a synthetic demo track.
+
+This project is not affiliated with or endorsed by YouTube or Google.

@@ -1,0 +1,51 @@
+name: Bug report
+description: Something does not work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a YouTube video …
+        2. Draw a loop …
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part?
+      options:
+        - YouTube panel
+        - Workstation (audio files)
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      description: Shown on the extension's card in chrome://extensions.
+      placeholder: "2.2.0"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 142 on macOS 15
+    validations:
+      required: true
+  - type: input
+    id: video
+    attributes:
+      label: Public video link (optional)
+      description: If it only happens with a certain video. Please do not upload private recordings.
