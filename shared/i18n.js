@@ -177,6 +177,7 @@
     oneFwdTitle: "Grid 10 ms later (Shift: 50 ms)",
     gridOff: "off",
 
+    keysOff: "Looper shortcuts are off – Space, T etc. go to YouTube. Turn them on with the Keys button.",
     noVideo: "No video found on this page.",
     audioFailed: "Sound processing unavailable – tempo and loop still work. Reloading the page usually helps.",
     clickToActivate: "Chrome is holding back the sound processing: click anywhere on the page or press a key to enable pitch, filter and note display.",
@@ -361,6 +362,7 @@
     oneFwdTitle: "Raster 10 ms später (Shift: 50 ms)",
     gridOff: "aus",
 
+    keysOff: "Looper-Tastenkürzel sind aus – Leertaste, T usw. gehen an YouTube. Mit dem Knopf „Tasten“ einschalten.",
     noVideo: "Kein Video auf dieser Seite gefunden.",
     audioFailed: "Klangbearbeitung nicht verfügbar – Tempo und Loop funktionieren. Seite neu laden hilft meist.",
     clickToActivate: "Chrome hält die Klangverarbeitung zurück: einmal irgendwo auf die Seite klicken oder eine Taste drücken, um Tonhöhe, Filter und Tonanzeige zu aktivieren.",

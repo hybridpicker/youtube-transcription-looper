@@ -303,6 +303,7 @@
   }
   function statusHint() {
     if (!video) hint(t("noVideo"));
+    else if (!G.keys) hint(t("keysOff"), true);
     else if (audio.failed) hint(t("audioFailed"), true);
     else if (!audio.ok) hint(t("clickToActivate"));
     else if (!audio.shift) hint(t("noShift"), true);
