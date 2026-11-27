@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `Space` (and the play button) starts an active loop from its start point instead of resuming mid-loop. Without an active loop, playback simply continues.
+- Loop edges no longer snap to the bar grid. They go exactly where you drag or set them (also with `A`/`B`); hold `Alt` while dragging to snap.
+- Sound processing, note display and waveform recording start automatically when the panel is open and Chrome allows it, instead of waiting for a click into the panel. Any key press now also counts.
+
+### Added
+
+- The YouTube panel remembers the waveform heard so far and the timeline zoom per video, so a reload or the YouTube app window no longer starts with an empty timeline.
+- The **Tap** and **1 here** buttons show their shortcuts (`T`, `X`).
+
+### Fixed
+
+- Once a tempo was set, the YouTube panel stopped moving the playhead, showing the bar position and recording the waveform.
+- The panel's shortcuts are now registered before YouTube's own, so keys like `T` no longer also trigger YouTube (theater mode).
+- A panel button clicked with the mouse kept the focus, so the next `Space` could press it again (for example switching the loop back on).
+- Setting B before A in the YouTube panel showed no warning and failed silently.
+
 ## [2.2.0] – 2026-11-22
 
 First public release.

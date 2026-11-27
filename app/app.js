@@ -324,6 +324,14 @@ function restart() {
   engine.play(true);
 }
 
+// Starting playback with an active loop always begins at its start;
+// without a loop it just continues.
+function togglePlay() {
+  if (engine.playing) return engine.play(false);
+  if (S.loop.on && hasLoop()) engine.seek(S.loop.a);
+  engine.play(true);
+}
+
 // ---- view ------------------------------------------------------------------
 
 function setView(start, end) {
@@ -802,7 +810,7 @@ window.addEventListener("drop", (event) => {
   if (file) loadFile(file);
 });
 
-$("play").onclick = () => engine.play(!engine.playing);
+$("play").onclick = () => togglePlay();
 $("restart").onclick = restart;
 $("loop-toggle").onclick = toggleLoop;
 $("set-a").onclick = () => setA(engine.pos);
@@ -902,7 +910,7 @@ window.addEventListener("keydown", (event) => {
   const typing = target.tagName === "TEXTAREA" || (target.tagName === "INPUT" && target.type !== "range");
   if (typing) {
     if (event.key === "Escape") target.blur();
-    else if (event.shiftKey && event.code === "Space") engine.play(!engine.playing);
+    else if (event.shiftKey && event.code === "Space") togglePlay();
     else if (event.shiftKey && event.key === "Enter" && target.tagName === "TEXTAREA") restart();
     else if (event.altKey && event.code === "KeyT" && target.tagName === "TEXTAREA") insertStamp();
     else return;
@@ -912,7 +920,7 @@ window.addEventListener("keydown", (event) => {
   const coarse = event.shiftKey;
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   switch (key) {
-    case " ": engine.play(!engine.playing); break;
+    case " ": togglePlay(); break;
     case "Enter": restart(); break;
     case "ArrowLeft": engine.seek(engine.pos - (event.altKey ? 0.1 : coarse ? 5 : 1)); break;
     case "ArrowRight": engine.seek(engine.pos + (event.altKey ? 0.1 : coarse ? 5 : 1)); break;

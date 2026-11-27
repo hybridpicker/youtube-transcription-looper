@@ -37,19 +37,79 @@
 
   // ---- storage -----------------------------------------------------------
 
+  // S and the timeline view belong to stateId, which only changes once the
+  // next video's settings are loaded, so a late save never lands on the
+  // wrong video.
+  let stateId = null;
   let saveTimer = 0;
+  function store(data) {
+    try {
+      chrome.storage.local.set(data).catch(() => {});
+    } catch { /* extension was reloaded; this copy is about to be replaced */ }
+  }
+  function flushSave() {
+    clearTimeout(saveTimer);
+    saveTimer = 0;
+    const data = { "ytl:global": G };
+    if (stateId) data[`ytl:v:${stateId}`] = { ...S, view };
+    store(data);
+  }
   function saveSoon() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      try {
-        const data = { "ytl:global": G };
-        if (videoId) data[`ytl:v:${videoId}`] = S;
-        chrome.storage.local.set(data).catch(() => {});
-      } catch { /* extension was reloaded; this copy is about to be replaced */ }
-    }, 400);
+    saveTimer = setTimeout(flushSave, 400);
   }
   async function load(keys) {
     try { return await chrome.storage.local.get(keys); } catch { return {}; }
+  }
+
+  // The waveform is drawn from what was heard while playing. It is kept per
+  // video (one byte per bucket) so a reload does not start from scratch.
+  // Only the most recently used ones are kept, within HEARD_BUDGET.
+  const HEARD_BUDGET = 4 * 1024 * 1024;
+  let heardId = null;
+  let heardDirty = false;
+  let lastHeardSave = 0;
+  function encodeHeard(levels) {
+    const bytes = new Uint8Array(levels.length);
+    for (let i = 0; i < levels.length; i++) {
+      if (levels[i] > 0) bytes[i] = Math.max(1, Math.round(Math.sqrt(Math.min(1, levels[i])) * 255));
+    }
+    let text = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(text);
+  }
+  function decodeHeard(saved, into) {
+    if (!saved || typeof saved.l !== "string" || Math.abs(saved.d - duration) > 0.5) return false;
+    let text;
+    try { text = atob(saved.l); } catch { return false; }
+    const n = Math.min(text.length, into.length);
+    for (let i = 0; i < n; i++) {
+      const q = text.charCodeAt(i) / 255;
+      into[i] = Math.max(into[i], q * q);
+    }
+    return n > 0;
+  }
+  async function saveHeard() {
+    if (!heardDirty || !heardId || !heard) return;
+    heardDirty = false;
+    lastHeardSave = performance.now();
+    const id = heardId;
+    const l = encodeHeard(heard);
+    let index;
+    try {
+      index = (await chrome.storage.local.get("ytl:heard"))["ytl:heard"] || {};
+    } catch { return; } // never rewrite the index from a failed read
+    index[id] = [Date.now(), l.length];
+    const drop = [];
+    let total = Object.values(index).reduce((sum, [, size]) => sum + size, 0);
+    for (const [other] of Object.entries(index).sort((x, y) => x[1][0] - y[1][0])) {
+      if (total <= HEARD_BUDGET || other === id) continue;
+      total -= index[other][1];
+      delete index[other];
+      drop.push(`ytl:h:${other}`);
+    }
+    store({ [`ytl:h:${id}`]: { d: duration, l }, "ytl:heard": index });
+    if (drop.length) try { chrome.storage.local.remove(drop).catch(() => {}); } catch { /* context gone */ }
   }
 
   // ---- panel -------------------------------------------------------------
@@ -163,8 +223,8 @@
           <div class="gridrow">
             <button id="grid-on" class="btn" data-i18n="gridBtn" data-i18n-title="gridOnTitle"></button>
             <input id="bpm" class="time-input num" inputmode="decimal" placeholder="BPM" data-i18n-aria="bpmAria" data-i18n-title="bpmAria">
-            <button id="tap" class="btn" data-i18n="tap" data-i18n-title="tapTitle"></button>
-            <button id="set-one" class="btn" data-i18n="setOne" data-i18n-title="setOneTitle"></button>
+            <button id="tap" class="btn" data-i18n-title="tapTitle"><span data-i18n="tap"></span><kbd>T</kbd></button>
+            <button id="set-one" class="btn" data-i18n-title="setOneTitle"><span data-i18n="setOne"></span><kbd>X</kbd></button>
             <select id="beats" data-i18n-aria="beatsAria" data-i18n-title="beatsAria">
               ${[2, 3, 4, 5, 6, 7, 9, 12].map((n) => `<option value="${n}"></option>`).join("")}
             </select>
@@ -286,6 +346,11 @@
       next?.addEventListener("ended", onEnded);
     }
     const sameVideo = id === videoId;
+    if (!sameVideo) {
+      // Write out what belongs to the previous video before switching.
+      if (saveTimer) flushSave();
+      saveHeard();
+    }
     video = next;
     videoId = id;
     duration = length;
@@ -295,14 +360,23 @@
     }
     if (!sameVideo || !heard || heard.length !== Math.ceil(duration * BUCKETS) + 1) {
       heard = new Float32Array(Math.ceil(duration * BUCKETS) + 1);
+      heardId = null; // nothing to save until the stored levels are merged in
+      heardDirty = false;
     }
-    if (!sameVideo) {
-      const key = `ytl:v:${id}`;
-      const saved = (await load(key))[key];
+    if (!sameVideo || !heardId) {
+      const key = `ytl:v:${id}`, heardKey = `ytl:h:${id}`;
+      const stored = await load([key, heardKey]);
       if (token !== bindToken) return;
-      S = Object.assign(fresh(), saved);
-      S.grid = Object.assign(fresh().grid, saved?.grid);
-      view = { start: 0, end: duration };
+      decodeHeard(stored[heardKey], heard);
+      heardId = id;
+      if (!sameVideo) {
+        const { view: savedView, ...saved } = stored[key] || {};
+        S = Object.assign(fresh(), saved);
+        S.grid = Object.assign(fresh().grid, saved.grid);
+        stateId = id;
+        view = { start: 0, end: duration };
+        if (savedView && savedView.end > savedView.start) view = { start: savedView.start, end: savedView.end };
+      }
     }
     view.end = clamp(view.end, 0.02, duration);
     view.start = clamp(view.start, 0, view.end - 0.02);
@@ -386,6 +460,19 @@
     applyPlayback();
     refreshControls();
     statusHint();
+  }
+
+  // Chrome only lets audio processing start after a user action, or when
+  // the page may play sound on its own (YouTube usually may). So try on its
+  // own whenever that looks possible, at most every few seconds; a refused
+  // attempt changes nothing and the player keeps its normal sound.
+  let lastAutoStart = -Infinity;
+  function autoStartAudio() {
+    if (!G.open || !video || audio.ok || audio.failed || audio.starting || host.hidden) return;
+    const allowed = navigator.userActivation?.hasBeenActive || (!video.paused && !video.muted);
+    if (!allowed || performance.now() - lastAutoStart < 5000) return;
+    lastAutoStart = performance.now();
+    ensureAudio();
   }
 
   const bandHz = (v) => 20 * 1000 ** (v / 1000);
@@ -487,14 +574,14 @@
   function snapTo(t, unit) {
     return clamp(S.grid.origin + Math.round((t - S.grid.origin) / unit) * unit, 0, duration);
   }
-  // Timeline gestures snap to beats when they are far enough apart on screen,
-  // otherwise to bars. Holding Alt switches snapping off.
+  // Loop edges go exactly where they are put. Holding Alt while dragging
+  // snaps them to beats when those are far enough apart on screen, otherwise
+  // to bars.
   function snap(t, event) {
-    if (!gridActive() || event?.altKey) return t;
+    if (!gridActive() || !event?.altKey) return t;
     const pxPerSec = waveBox.clientWidth / (view.end - view.start);
     return snapTo(t, beatLen() * pxPerSec >= 8 ? beatLen() : barLen());
   }
-  const snapBeat = (t) => (gridActive() ? snapTo(t, beatLen()) : t);
 
   function setGrid(patch) {
     Object.assign(S.grid, patch);
@@ -575,13 +662,13 @@
     if (S.loop.b != null && S.loop.b - S.loop.a < MIN_LOOP) S.loop.b = null;
     syncLoop();
   }
-  function setB(t) {
+  function setB(time) {
     if (S.loop.a == null) S.loop.a = 0;
-    if (t - S.loop.a < MIN_LOOP) {
+    if (time - S.loop.a < MIN_LOOP) {
       hint(t("endAfterStart"), true, 2500);
       return;
     }
-    S.loop.b = clamp(t, 0, duration);
+    S.loop.b = clamp(time, 0, duration);
     S.loop.on = true;
     syncLoop();
     enterLoop();
@@ -626,14 +713,20 @@
     seek(hasLoop() ? S.loop.a : 0);
     video.play().catch(() => {});
   }
+  // Starting playback with an active loop always begins at its start, so
+  // every pass is heard in full; without a loop it just continues.
   function togglePlay() {
     if (gapTimer) {
       clearTimeout(gapTimer);
       gapTimer = 0;
       return;
     }
-    if (video.paused) video.play().catch(() => {});
-    else video.pause();
+    if (!video.paused) {
+      video.pause();
+      return;
+    }
+    if (S.loop.on && hasLoop()) seek(S.loop.a);
+    video.play().catch(() => {});
   }
 
   // Runs every animation frame and on timeupdate (which keeps firing in a
@@ -671,6 +764,7 @@
     start = clamp(start, 0, duration - span);
     view = { start, end: start + span };
     draw();
+    saveSoon();
   }
   function zoom(factor, around) {
     const span = view.end - view.start;
@@ -1082,17 +1176,18 @@
       if (G.open && video) {
         mount();
         applyPlayback();
+        autoStartAudio();
       }
     }
     if (!video || host.hidden) return;
     enforceLoop();
-    const t = video.currentTime;
-    const text = fmt(t);
+    const time = video.currentTime;
+    const text = fmt(time);
     if (text !== lastClock) $("time").textContent = lastClock = text;
     $("play").classList.toggle("on", !video.paused || Boolean(gapTimer));
     let barText = S.grid.bpm ? t("gridOff") : "–";
     if (gridActive()) {
-      const pos = (t - S.grid.origin) / barLen();
+      const pos = (time - S.grid.origin) / barLen();
       barText = pos < 0 ? "–" : `${Math.floor(pos) + 1} · ${Math.floor((pos - Math.floor(pos)) * S.grid.beats + 1e-6) + 1}`;
     }
     if (barText !== lastBar) $("bar-out").textContent = lastBar = barText;
@@ -1106,28 +1201,30 @@
         const v = Math.abs(timeData[i]);
         if (v > peak) peak = v;
       }
-      const bucket = clamp(Math.floor(t * BUCKETS), 0, heard.length - 1);
+      const bucket = clamp(Math.floor(time * BUCKETS), 0, heard.length - 1);
       const from = lastBucket >= 0 && bucket > lastBucket && bucket - lastBucket < 25 ? lastBucket + 1 : bucket;
       for (let i = from; i <= bucket; i++) heard[i] = Math.max(peak, 0.004);
       lastBucket = bucket;
       dirty = true;
+      if (heardId) heardDirty = true;
     } else {
       lastBucket = -1;
     }
 
     const span = view.end - view.start;
-    if (playing && !drag && (t > view.end - span * 0.02 || t < view.start) && span < duration) {
-      setView(t - span * 0.08, t - span * 0.08 + span);
+    if (playing && !drag && (time > view.end - span * 0.02 || time < view.start) && span < duration) {
+      setView(time - span * 0.08, time - span * 0.08 + span);
     } else if (dirty && now - lastDraw > 120) {
       lastDraw = now;
       dirty = false;
       draw();
     }
-    const x = timeToX(t);
+    const x = timeToX(time);
     const head = $("playhead");
     head.style.visibility = x < 0 || x > waveBox.clientWidth ? "hidden" : "visible";
     head.style.transform = `translateX(${x}px)`;
 
+    if (heardDirty && now - lastHeardSave > 5000) saveHeard();
     if (now - lastSpec > 70) {
       lastSpec = now;
       if (playing || !audio.ok) drawSpectrum(playing);
@@ -1138,11 +1235,19 @@
 
   // Any click while the panel is open is a user gesture that may start audio processing.
   listen(document, "pointerdown", () => { if (G.open && !host.hidden) ensureAudio(); }, { capture: true });
+  listen(window, "keydown", () => { if (G.open && !host.hidden) ensureAudio(); }, { capture: true });
+  listen(window, "play", () => { lastAutoStart = -Infinity; autoStartAudio(); }, { capture: true });
+  // A button clicked with the mouse must not keep the focus: otherwise the
+  // next Space or Enter would press it again (e.g. switch the loop back on).
+  listen(root, "click", (event) => {
+    const button = event.target.closest?.("button");
+    if (button && event.detail > 0) button.blur();
+  });
   $("play").onclick = togglePlay;
   $("restart").onclick = restart;
   $("loop-toggle").onclick = toggleLoop;
-  $("set-a").onclick = () => setA(snapBeat(heardTime()));
-  $("set-b").onclick = () => setB(snapBeat(heardTime()));
+  $("set-a").onclick = () => setA(heardTime());
+  $("set-b").onclick = () => setB(heardTime());
   $("loop-prev").onclick = () => moveLoop(-1);
   $("loop-next").onclick = () => moveLoop(1);
   $("loop-half").onclick = () => scaleLoop(0.5);
@@ -1249,29 +1354,26 @@
   }
 
   // Keyboard: while the panel is open its shortcuts take precedence over
-  // YouTube's single-key shortcuts (toggle with the "Keys" button).
+  // YouTube's single-key shortcuts (toggle with the "Keys" button). The
+  // listeners sit on window in the capture phase; youtube/keys-early.js
+  // registers them before YouTube's own scripts run, because YouTube also
+  // listens there and whoever registers first is called first.
   const swallowed = new Set();
-  listen(window, "keydown", (event) => {
-    if (!G.open || !G.keys || !video || host.hidden || event.metaKey || event.ctrlKey) return;
-    const target = event.composedPath()[0];
-    const typing = target instanceof HTMLElement && (target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable || (target.tagName === "INPUT" && target.type !== "range"));
-    if (typing) {
-      if (event.key === "Escape" && root.contains(target)) target.blur();
-      if (root.contains(target)) event.stopPropagation(); // keep YouTube's shortcuts out of our text fields
-      return;
-    }
+  const SHORTCUT_KEYS = new Set([" ", "Enter", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "a", "b", "l", ",", ";", ".", ":",
+    "h", "d", "q", "w", "e", "r", "+", "*", "-", "_", "m", "t", "x", "g", "s", "z", "f"]);
+  function runShortcut(event) {
     const coarse = event.shiftKey;
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
     const t = video.currentTime;
     switch (key) {
       case " ": togglePlay(); break;
-      case "Enter": if (root.contains(target) && target.tagName === "BUTTON") return; restart(); break;
+      case "Enter": restart(); break;
       case "ArrowLeft": seek(t - (event.altKey ? 0.1 : coarse ? 5 : 1)); break;
       case "ArrowRight": seek(t + (event.altKey ? 0.1 : coarse ? 5 : 1)); break;
       case "ArrowUp": setSpeed(S.speed + 5); break;
       case "ArrowDown": setSpeed(S.speed - 5); break;
-      case "a": setA(snapBeat(heardTime())); break;
-      case "b": setB(snapBeat(heardTime())); break;
+      case "a": setA(heardTime()); break;
+      case "b": setB(heardTime()); break;
       case "l": toggleLoop(); break;
       case ",": case ";": moveLoop(-1); break;
       case ".": case ":": moveLoop(1); break;
@@ -1291,23 +1393,42 @@
       case "z": zoomToLoop(); break;
       case "f": setView(0, duration); break;
       default:
-        if (/^[1-9]$/.test(key) && S.items[key - 1]) { recall(S.items[key - 1]); break; }
-        return;
+        if (/^[1-9]$/.test(key) && S.items[key - 1]) recall(S.items[key - 1]);
     }
-    ensureAudio();
+  }
+  function onKeyDown(event) {
+    if (!G.open || !G.keys || !video || host.hidden || event.metaKey || event.ctrlKey) return;
+    const target = event.composedPath()[0];
+    const typing = target instanceof HTMLElement && (target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable || (target.tagName === "INPUT" && target.type !== "range"));
+    if (typing) {
+      if (event.key === "Escape" && root.contains(target)) target.blur();
+      if (root.contains(target)) event.stopPropagation(); // keep YouTube's shortcuts out of our text fields
+      return;
+    }
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    if (!SHORTCUT_KEYS.has(key) && !(/^[1-9]$/.test(key) && S.items[key - 1])) return;
+    if (key === "Enter" && root.contains(target) && target.tagName === "BUTTON") return; // let the button click
+    // Claim the key before acting, so YouTube never sees it, even if the action fails.
     swallowed.add(event.code);
     event.preventDefault();
     event.stopImmediatePropagation();
+    try {
+      runShortcut(event);
+    } catch (error) {
+      console.warn("[Transcription Looper] Shortcut failed:", error);
+    }
+    ensureAudio();
     if (root.contains(target) && target.tagName === "BUTTON") target.blur();
-  }, { capture: true });
-  for (const type of ["keyup", "keypress"]) {
-    listen(window, type, (event) => {
-      if (!swallowed.has(event.code)) return;
-      if (type === "keyup") swallowed.delete(event.code);
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }, { capture: true });
   }
+  function onKey(event) {
+    if (event.type === "keydown") return onKeyDown(event);
+    if (!swallowed.has(event.code)) return;
+    if (event.type === "keyup") swallowed.delete(event.code);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+  if (globalThis.__ytlEarlyKeys) globalThis.__ytlKeys = onKey;
+  else for (const type of ["keydown", "keyup", "keypress"]) listen(window, type, onKey, { capture: true });
 
   const onMessage = (message) => {
     if (message?.type === "toggle-panel") {
@@ -1325,6 +1446,11 @@
   };
   chrome.runtime.onMessage.addListener(onMessage);
   listen(document, "yt-navigate-finish", () => { lastBind = 0; });
+  // Reload, closing the tab or the app window: keep what was heard so far.
+  const persistNow = () => { if (saveTimer) flushSave(); saveHeard(); };
+  listen(window, "pagehide", persistNow);
+  listen(document, "visibilitychange", () => { if (document.hidden) persistNow(); });
+  listen(window, "pause", persistNow, { capture: true });
   const observer = new ResizeObserver(resize);
   observer.observe(waveBox);
   observer.observe($("spectrum"));
@@ -1334,7 +1460,9 @@
     cancelAnimationFrame(raf);
     observer.disconnect();
     clearTimeout(gapTimer);
-    clearTimeout(saveTimer);
+    if (saveTimer) flushSave();
+    saveHeard();
+    if (globalThis.__ytlKeys === onKey) globalThis.__ytlKeys = null;
     try { chrome.runtime.onMessage.removeListener(onMessage); } catch { /* context gone */ }
     video?.removeEventListener("timeupdate", enforceLoop);
     video?.removeEventListener("ended", onEnded);

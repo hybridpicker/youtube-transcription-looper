@@ -6,7 +6,7 @@ Transcription Looper processes everything on your device. It has no server, no a
 
 - **Audio:** The sound of the YouTube video you are watching, or the audio file you open in the workstation, is processed locally in your browser (tempo, pitch, filters, note display). It is never recorded, uploaded or sent anywhere.
 - **Settings you make:** Loop points, tempo, pitch, bar grid, markers, saved loops, notes and interface preferences (such as the language) are stored locally in your browser:
-  - for YouTube videos in the extension's storage (`chrome.storage.local`), keyed by the video ID;
+  - for YouTube videos in the extension's storage (`chrome.storage.local`), keyed by the video ID, together with the timeline zoom and a coarse loudness curve of the parts you have played (used to redraw the waveform; it cannot be turned back into audio). Only the waveforms of the most recently used videos are kept, up to about 4 MB;
   - for audio files in the workstation's local storage, keyed by file name and size. The last opened file is kept in the browser's IndexedDB so it can be reopened on the next start.
 - **No network requests:** The extension does not make network requests of its own. YouTube itself, of course, works as usual.
 

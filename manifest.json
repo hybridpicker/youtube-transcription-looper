@@ -34,6 +34,15 @@
         "https://www.youtube.com/*"
       ],
       "js": [
+        "youtube/keys-early.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
         "shared/common.js",
         "shared/i18n.js",
         "youtube/panel-css.js",

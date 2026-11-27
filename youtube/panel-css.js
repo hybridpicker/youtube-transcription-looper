@@ -24,6 +24,7 @@ h2 { cursor: pointer; user-select: none; white-space: nowrap; margin: 0; font-si
 .muted { color: var(--muted); }
 .small { font-size: 11.5px; }
 kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--panel-2); font: 600 11px/1.5 ui-monospace, Menlo, monospace; text-align: center; }
+.btn kbd { min-width: 0; margin-left: 6px; padding: 0 4px; font-size: 10px; line-height: 1.35; opacity: .75; }
 output { font-variant-numeric: tabular-nums; font-weight: 600; }
 
 .head { display: flex; align-items: center; gap: 8px; }

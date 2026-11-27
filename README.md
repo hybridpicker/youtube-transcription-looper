@@ -19,7 +19,7 @@ The interface is available in **English** and **German**. It follows your browse
 - **Slow-down from 10 to 200 %** at the same pitch, also below YouTube's own 25 % limit, using a phase vocoder that sounds clean at slow tempos.
 - **Pitch** ±12 semitones plus fine tuning in cents, independent of the tempo.
 - **Sound** – left / right channel only, mono, center removed (often reduces the lead vocal or solo), and a frequency range filter, e.g. bass only.
-- **Bar grid** – tap the tempo, set the one, and loops snap to beats and bars; set a loop as "bars 5 to 8".
+- **Bar grid** – tap the tempo, set the one, see bar numbers in the timeline; set a loop as "bars 5 to 8".
 - **Live notes** – a piano keyboard shows which notes are sounding and guesses the chord. Click a key to hear the note.
 - **Places** – named markers and saved loops, remembered per video or file.
 - **Workstation extras** – sample-accurate loops without clicks, notes with timestamps, export of the current loop as WAV.
@@ -56,11 +56,11 @@ The `⬓` button in the header moves the panel below the video instead (`◨` mo
 | Tempo | 10–200 % at the same pitch. Click the percentage to reset to 100 %. |
 | Pitch | ±12 semitones and fine tuning in cents, independent of the tempo. |
 | Sound | Channel (left, right, mono, center removed) and frequency range, e.g. bass only. |
-| Bars | Bar grid with bar numbers in the timeline; loop edges snap to beats and bars, and a loop can be set as "bar 5 to 8". |
+| Bars | Bar grid with bar numbers in the timeline; loop edges can be placed freely (hold `Alt` to snap to beats and bars), and a loop can be set as "bar 5 to 8". |
 | Places | Markers (**+ Marker**) and saved loops (**+ Loop**) with names, remembered per video. |
 | Notes | Shows live on a piano keyboard which notes are sounding and guesses the chord. Click a key to hear the note for comparison. |
 
-Loop, tempo, pitch, grid and places are saved per video.
+Loop, tempo, pitch, grid, places, zoom and the waveform heard so far are saved per video, so a reload (also in the YouTube app window) picks up where you left off.
 
 The keyboard shortcuts are the same as in the workstation (see below), plus `T` (tap tempo), `X` (set the one) and `G` (grid on/off). While the panel is open they take precedence over YouTube's own keys; the **Keys** button turns that off.
 
@@ -72,7 +72,7 @@ The **Bars** section starts folded; click its heading to open it.
 2. **Set the one:** on the first beat of bar 1, click **1 here** (or press `X`). `◂` `▸` shift the grid by 10 ms (`Shift`: 50 ms).
 3. **Time signature:** choose the beats per bar (default 4).
 
-The timeline then shows bar lines with numbers instead of times, beats when zoomed in, and the section header shows the current bar and beat. Loop edges snap while dragging and with `A`/`B`; hold `Alt` while dragging to switch snapping off, **Grid** (`G`) hides it all. A loop that lies on bar lines moves bar by bar with `,` and `.`.
+The timeline then shows bar lines with numbers instead of times, beats when zoomed in, and the section header shows the current bar and beat. Loop edges go exactly where you put them; hold `Alt` while dragging to snap them to beats and bars, **Grid** (`G`) hides it all. A loop that lies on bar lines moves bar by bar with `,` and `.`.
 
 The grid is even. On recordings with a drifting tempo it gets out of step over time; set the one again at the passage you are working on.
 
@@ -82,7 +82,7 @@ For slow-down and transposition, the video's sound runs through the extension's 
 
 ### Good to know
 
-- Sound processing starts after your first click on the page, because Chrome does not allow audio processing without a user action. Loop and tempo work before that.
+- Sound processing (pitch, filters, note display, waveform) starts on its own as soon as Chrome allows it: usually right away on YouTube, otherwise after your first click or key press on the page. Loop and tempo work before that.
 - When jumping back to the loop start, the YouTube player pauses for a tiny moment. For seamless, sample-accurate loops, use the workstation with an audio file.
 - The looper does not interfere during ads.
 - The panel is not visible in fullscreen; loop and shortcuts keep working.
@@ -111,7 +111,7 @@ Loop, tempo, markers and notes are remembered per file. The last opened file is 
 
 | Key | Action |
 | --- | --- |
-| `Space` | Play / pause |
+| `Space` | Play / pause; with an active loop, playback always starts at the loop start |
 | `Enter` | Jump to loop start and play |
 | `←` `→` | 1 s back / forward (`Shift`: 5 s, `Alt`: 0.1 s) |
 | `A` `B` | Loop start / end at the playback position |

@@ -19,7 +19,7 @@ Die Oberfläche gibt es auf **Englisch** und **Deutsch**. Sie richtet sich nach 
 - **Zeitlupe von 10 bis 200 %** bei gleicher Tonhöhe, auch unter YouTubes Grenze von 25 %, mit einem Phase-Vocoder, der auch bei langsamen Tempi sauber klingt.
 - **Tonhöhe** ±12 Halbtöne und Feinstimmung in Cent, unabhängig vom Tempo.
 - **Klang**: nur linker oder rechter Kanal, Mono, Mitte entfernt (dämpft oft Gesang oder Solo), und ein Frequenzbereich, z. B. nur Bass.
-- **Taktraster**: Tempo tippen, die Eins setzen, und Loops rasten auf Schläge und Takte ein; ein Loop lässt sich als „Takt 5 bis 8“ setzen.
+- **Taktraster**: Tempo tippen, die Eins setzen, Taktnummern in der Zeitleiste; ein Loop lässt sich als „Takt 5 bis 8“ setzen.
 - **Töne live**: Eine Klaviatur zeigt, welche Töne klingen, und schätzt den Akkord. Ein Klick auf eine Taste spielt den Ton.
 - **Stellen**: benannte Marker und gespeicherte Loops, pro Video oder Datei gemerkt.
 - **Extras der Werkstatt**: samplegenaue Loops ohne Knackser, Notizen mit Zeitmarken, Export des aktuellen Loops als WAV.
@@ -56,11 +56,11 @@ Der Knopf `⬓` in der Kopfzeile setzt das Bedienfeld stattdessen unter das Vide
 | Tempo | 10–200 % bei gleicher Tonhöhe. Ein Klick auf die Prozentzahl setzt auf 100 % zurück. |
 | Tonhöhe | ±12 Halbtöne und Feinstimmung in Cent, unabhängig vom Tempo. |
 | Klang | Kanalwahl (links, rechts, Mono, Mitte entfernt) und Frequenzbereich, z. B. nur Bass. |
-| Takte | Taktraster in der Zeitleiste mit Taktnummern; Loop-Grenzen rasten auf Schläge und Takte ein, und ein Loop lässt sich direkt als „Takt 5 bis 8“ setzen. |
+| Takte | Taktraster in der Zeitleiste mit Taktnummern; Loop-Grenzen lassen sich frei setzen (mit `Alt` rasten sie auf Schläge und Takte ein), und ein Loop lässt sich direkt als „Takt 5 bis 8“ setzen. |
 | Stellen | Marker (**+ Marker**) und gespeicherte Loops (**+ Loop**) mit Namen, pro Video gemerkt. |
 | Töne | Zeigt live über einer Klaviatur, welche Töne klingen, und schätzt den Akkord. Ein Klick auf eine Taste spielt den Ton zum Vergleich. |
 
-Loop, Tempo, Tonhöhe, Raster und Stellen werden pro Video gespeichert.
+Loop, Tempo, Tonhöhe, Raster, Stellen, Zoom und die bisher gehörte Wellenform werden pro Video gespeichert; nach einem Reload (auch im YouTube-App-Fenster) geht es dort weiter.
 
 Die Tastenkürzel sind dieselben wie in der Werkstatt (siehe unten), dazu `T` (Tempo tippen), `X` (Eins setzen) und `G` (Raster ein/aus). Solange das Bedienfeld offen ist, haben sie Vorrang vor YouTubes eigenen Tasten; der Knopf **Tasten** schaltet das aus.
 
@@ -72,7 +72,7 @@ Der Abschnitt **Takte** ist anfangs eingeklappt; ein Klick auf die Überschrift 
 2. **Eins setzen:** An der ersten Zählzeit von Takt 1 auf **1 hier** klicken (oder `X`). Mit `◂` `▸` lässt sich das Raster um 10 ms verschieben (`Shift`: 50 ms).
 3. **Taktart:** Schläge pro Takt wählen (Standard 4).
 
-Danach zeigt die Zeitleiste Taktstriche mit Nummern statt Zeiten, beim Hineinzoomen auch die Schläge, und oben rechts im Abschnitt steht der aktuelle Takt und Schlag. Loop-Grenzen rasten beim Ziehen und bei `A`/`B` ein; `Alt` beim Ziehen schaltet das Einrasten aus, **Raster** (`G`) blendet alles aus. Ein Loop, der auf Taktgrenzen liegt, springt mit `,` und `.` taktweise weiter.
+Danach zeigt die Zeitleiste Taktstriche mit Nummern statt Zeiten, beim Hineinzoomen auch die Schläge, und oben rechts im Abschnitt steht der aktuelle Takt und Schlag. Loop-Grenzen landen genau dort, wo du sie setzt; mit `Alt` beim Ziehen rasten sie auf Schläge und Takte ein, **Raster** (`G`) blendet alles aus. Ein Loop, der auf Taktgrenzen liegt, springt mit `,` und `.` taktweise weiter.
 
 Das Raster ist gleichmäßig. Bei Aufnahmen mit schwankendem Tempo läuft es mit der Zeit auseinander; dann die Eins am jeweiligen Abschnitt neu setzen.
 
@@ -82,7 +82,7 @@ Für Zeitlupe und Transposition wird der Ton des Videos durch einen eigenen Phas
 
 ### Gut zu wissen
 
-- Die Klangbearbeitung startet erst nach dem ersten Klick auf die Seite, weil Chrome Tonverarbeitung ohne Nutzeraktion nicht erlaubt. Bis dahin funktionieren Loop und Tempo bereits.
+- Die Klangbearbeitung (Tonhöhe, Filter, Tonanzeige, Wellenform) startet von selbst, sobald Chrome es erlaubt: auf YouTube meist sofort, sonst nach dem ersten Klick oder Tastendruck auf der Seite. Bis dahin funktionieren Loop und Tempo bereits.
 - Beim Sprung zum Loop-Anfang macht der YouTube-Player eine winzige Pause. Für nahtlose, samplegenaue Loops ist die Werkstatt mit einer Audiodatei besser geeignet.
 - Während Werbung greift der Looper nicht ein.
 - Im Vollbildmodus ist das Bedienfeld nicht sichtbar; Loop und Tastenkürzel laufen weiter.
@@ -111,7 +111,7 @@ Loop, Tempo, Marker und Notizen werden pro Datei gemerkt. Die zuletzt geöffnete
 
 | Taste | Funktion |
 | --- | --- |
-| `Leertaste` | Wiedergabe / Pause |
+| `Leertaste` | Wiedergabe / Pause; bei aktivem Loop beginnt die Wiedergabe immer am Loop-Anfang |
 | `Enter` | Zum Loop-Anfang springen und abspielen |
 | `←` `→` | 1 s zurück / vor (`Shift`: 5 s, `Alt`: 0,1 s) |
 | `A` `B` | Loop-Anfang / -Ende an der Abspielposition |
